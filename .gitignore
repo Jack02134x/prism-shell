@@ -1,0 +1,9 @@
+# per-user state — generated on first run / by install.sh
+config.json
+.cache/
+.state/
+
+# personal notes
+changes_to_make.txt
+*.bak-*
+action_commands.md
