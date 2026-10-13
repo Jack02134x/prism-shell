@@ -114,15 +114,69 @@ Singleton {
     readonly property color grad2: wallColors[1] ?? tertiary
     readonly property color grad3: wallColors[2] ?? secondary
 
+    // perceptual distance (OKLab ΔE): accents closer than this look like one colour
+    function oklab(c) {
+        const lin = v => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        const r = lin(c.r), g = lin(c.g), b = lin(c.b);
+        const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+        const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+        const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+        return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s, 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
+    }
+    function deltaE(a, b) {
+        const x = oklab(a), y = oklab(b);
+        return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
+    }
+
+    // WCAG contrast of two colours
+    function contrast(a, b) {
+        const lum = c => {
+            const lin = v => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+            return 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+        };
+        const x = lum(a), y = lum(b);
+        return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+    }
+    // darken (light theme) or lighten (dark theme) until it reads at 3:1 on cards
+    function readable(c) {
+        let l = c.hslLightness;
+        let out = c;
+        for (let i = 0; i < 12 && contrast(out, surfaceContainer) < 3; i++) {
+            l = isLight ? l - 0.04 : l + 0.04;
+            out = Qt.hsla(c.hslHue < 0 ? 0 : c.hslHue, c.hslSaturation, Math.max(0, Math.min(1, l)), 1);
+        }
+        return out;
+    }
+
+    // 10 accents, all told apart from each other: matugen's roles and the wallpaper's
+    // own colours first; on a muted wallpaper, lighter/darker shades of those and
+    // hues at most ~50° away (never a far-off rainbow hue)
     readonly property int spectrumSize: 10
     readonly property var spectrum: {
-        const base = [primary, grad1, tertiary, grad2, secondary, grad3];
-        for (const c of wallColors.slice(3))
-            base.push(c);
-        base.push(primaryFixedDim);
+        const base = [primary, grad1, tertiary, grad2, secondary, grad3].concat(wallColors.slice(3));
+        // pastel roles disappear on a light background
+        if (!isLight)
+            base.push(primaryFixedDim);
         const out = [];
-        for (let i = 0; i < spectrumSize; i++)
-            out.push(base[i % base.length]);
+        const take = (c, minDist) => {
+            c = readable(c);
+            if (out.length < spectrumSize && out.every(o => deltaE(o, c) >= minDist))
+                out.push(c);
+        };
+        for (const c of base)
+            take(c, 0.08);
+        const mid = isLight ? 0.42 : 0.7;
+        for (const dh of [0, 0.07, -0.07, 0.14, -0.14])
+            for (const dl of (isLight ? [-0.12, -0.2, 0] : [0.12, -0.08, 0])) // toward more contrast
+                for (const c of base) {
+                    const h = c.hslHue < 0 ? primary.hslHue : c.hslHue;
+                    take(Qt.hsla((h + dh + 1) % 1, Math.max(c.hslSaturation, 0.4), mid + dl, 1), 0.08);
+                }
+        // last resort: relax the distance, then repeat
+        for (const c of base)
+            take(c, 0.04);
+        for (let i = 0; out.length < spectrumSize; i++)
+            out.push(out[i % Math.max(1, out.length)] ?? primary);
         return out;
     }
     readonly property var spectrumDeep: {
@@ -165,6 +219,52 @@ Singleton {
     function on(c) {
         const l = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
         return l > 0.55 ? "#101418" : "#f4f7f6";
+    }
+
+    // ---- palette.json: the current colours for other apps ----------------------
+    // Written to .state/palette.json whenever the wallpaper (and so the palette)
+    // changes, so programs that aren't Quickshell (the screen-time GUI, scripts)
+    // can match it. Stable format: bump "version" if it ever changes.
+    function hex(c) {
+        const h = v => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, "0");
+        return "#" + h(c.r) + h(c.g) + h(c.b);
+    }
+    function exportPalette() {
+        if (Object.keys(palTo).length === 0)
+            return;
+        const colors = {};
+        for (const k in palTo)
+            colors[k] = hex(palTo[k]);
+        paletteFile.setText(JSON.stringify({
+            version: 1,
+            mode: isLight ? "light" : "dark",
+            wallpaper: wallpaper,
+            // matugen Material You roles: background, surface, surface_container, on_surface, primary, ...
+            colors: colors,
+            // wallpaper-derived accents Prism uses for gradients and per-app colours
+            accents: spectrum.map(c => hex(c)),
+            gradient: [hex(grad1), hex(grad2), hex(grad3)],
+            fonts: { ui: font, mono: mono, display: display, icons: iconFont },
+            // corner radii (px) and how cards are drawn: surface_container at `alpha`,
+            // tinted `tint` of the way toward the gradient colours, top to bottom
+            radius: { xs: r.xs, sm: r.sm, md: r.md, lg: r.lg, xl: r.xl },
+            card: { base: "surface_container", alpha: 0.9, tint: 0.1 },
+            ts: Date.now() / 1000
+        }, null, 2));
+    }
+    onPalToChanged: exportTimer.restart()
+    onWallColorsChanged: exportTimer.restart()
+    Timer {
+        id: exportTimer
+        interval: 600
+        onTriggered: root.exportPalette()
+    }
+    FileView {
+        id: paletteFile
+        path: Config.stateDir + "/palette.json"
+        atomicWrites: true
+        blockWrites: false
+        preload: false
     }
 
     // ---- type & shape --------------------------------------------------------

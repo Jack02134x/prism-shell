@@ -20,6 +20,10 @@ Singleton {
     property string liveApp: ""
     property string liveDetail: ""
     property string liveState: ""
+    // app -> accent slot, shared with the tracker's own GUI so both colour apps alike:
+    // rank apps by all-time seconds (days + audio), give the top 8 their hashed slot
+    // and step to the next free slot on a clash; everyone else is "Other"
+    property var slots: ({})
 
     readonly property string usagePath: Config.loaded && Config.paths.screentime !== "" ? Config.paths.screentime + "/usage.json" : ""
     readonly property string statusPath: Quickshell.env("XDG_RUNTIME_DIR") + "/hypr-screentime.status.json"
@@ -45,7 +49,40 @@ Singleton {
         return out;
     }
 
+    function hashSlot(name) {
+        let h = 0;
+        for (let i = 0; i < name.length; i++)
+            h = (h * 31 + name.charCodeAt(i)) | 0;
+        return Math.abs(h) % 10;
+    }
+    function computeSlots() {
+        const totals = {};
+        for (const tree of [data.days ?? {}, data.audio ?? {}])
+            for (const day in tree)
+                for (const app in tree[day])
+                    for (const detail in tree[day][app])
+                        for (const h in tree[day][app][detail])
+                            totals[app] = (totals[app] ?? 0) + tree[day][app][detail][h];
+        const ranked = Object.keys(totals).sort((a, b) => totals[b] - totals[a]).slice(0, 8);
+        const taken = new Array(10).fill(false);
+        const out = {};
+        for (const app of ranked) {
+            let s = hashSlot(app);
+            while (taken[s])
+                s = (s + 1) % 10;
+            taken[s] = true;
+            out[app] = s;
+        }
+        slots = out;
+    }
+    // colour for an app; apps outside the top 8 get the neutral "Other" colour
+    function colorFor(app) {
+        const s = slots[app];
+        return s === undefined ? Theme.outline : Theme.accent(s);
+    }
+
     function compute() {
+        computeSlots();
         const key = dayKey(new Date());
         const d = dayTree(key);
         const hrs = new Array(24).fill(0);

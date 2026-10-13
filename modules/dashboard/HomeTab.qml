@@ -387,7 +387,7 @@ Item {
                                         height: parent.height
                                         radius: 3
                                         width: root.active ? parent.width * stRow.modelData.total / Math.max(1, ScreenTime.apps[0]?.total ?? 1) : 0
-                                        color: Theme.accent(stRow.index * 2)
+                                        color: ScreenTime.colorFor(stRow.modelData.name)
                                         Behavior on width { NumAnim { duration: Motion.slower; easing.bezierCurve: Motion.spatial } }
                                     }
                                 }

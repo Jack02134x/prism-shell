@@ -89,7 +89,7 @@ Item {
                             height: 220
                             preferredRendererType: Shape.CurveRenderer
                             ShapePath {
-                                strokeColor: Theme.accent(seg.index * 3 % 10)
+                                strokeColor: ScreenTime.colorFor(seg.modelData.name)
                                 strokeWidth: 26
                                 fillColor: "transparent"
                                 capStyle: ShapePath.FlatCap
@@ -141,7 +141,7 @@ Item {
                                 implicitWidth: 10
                                 implicitHeight: 10
                                 radius: 3
-                                color: app.index < 7 ? Theme.accent(app.index * 3 % 10) : Theme.outline
+                                color: ScreenTime.colorFor(app.modelData.name)
                             }
                             AppIcon {
                                 size: 16
