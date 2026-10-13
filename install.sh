@@ -19,8 +19,10 @@
 #    6. Hyprland: a full starter config if you don't have one yet; Prism's
 #       autostart + keybinds either way; hypridle (dim, lock, screens off)
 #    7. kitty + GTK look, Hyprland on login (tty1), 10 wallpapers, first palette
+#    8. screen time: the hyprland-screen_time tracker (systemd user service) that
+#       feeds the dashboard's Screen time tab, plus its GUI in the app launcher
 #
-# install.sh --help for options. install.sh --uninstall reverses steps 3–7.
+# install.sh --help for options. install.sh --uninstall reverses steps 3–8.
 
 set -uo pipefail
 
@@ -32,6 +34,11 @@ HYPR_LUA="$HYPR_DIR/hyprland.lua"
 MATUGEN_CONF="$CONFIG_HOME/matugen/config.toml"
 KITTY_CONF="$CONFIG_HOME/kitty/kitty.conf"
 FISH_LOGIN="$CONFIG_HOME/fish/conf.d/prism-hyprland.fish"
+DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+SCREENTIME_REPO="https://github.com/Jack02134x/hyprland-screen_time.git"
+SCREENTIME_DIR="$DATA_HOME/hyprland-screen_time"
+ST_SERVICE="$CONFIG_HOME/systemd/user/hypr-screentime.service"
+ST_DESKTOP="$DATA_HOME/applications/hypr-screentime.desktop"
 LOG="${XDG_CACHE_HOME:-$HOME/.cache}/prism-install.log"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
@@ -40,7 +47,7 @@ LUA_B="-- >>> prism >>>" LUA_E="-- <<< prism <<<"
 SH_B="# >>> prism >>>" SH_E="# <<< prism <<<"
 CSS_B="/* >>> prism >>> */" CSS_E="/* <<< prism <<< */"
 
-YES=0 DRY=0 DO_PACKAGES=1 DO_HYPR=1 DO_BINDS=1 DO_START=1 DO_LOGIN=1 DO_APPS=1 UNINSTALL=0
+YES=0 DRY=0 DO_PACKAGES=1 DO_HYPR=1 DO_BINDS=1 DO_START=1 DO_LOGIN=1 DO_APPS=1 DO_ST=1 UNINSTALL=0
 
 # ---------------------------------------------------------------- output ----
 if [[ -t 1 ]]; then
@@ -189,6 +196,7 @@ Usage: install.sh [options]
       --no-binds     autostart only, keep your own keybinds
       --no-apps      don't theme kitty / GTK
       --no-login     don't start Hyprland automatically on tty1
+      --no-screentime  skip the screen-time tracker
       --no-start     don't start anything at the end
       --uninstall    take Prism back out (packages stay)
   -h, --help         this help
@@ -206,6 +214,7 @@ while (($#)); do
     --no-binds) DO_BINDS=0 ;;
     --no-apps) DO_APPS=0 ;;
     --no-login) DO_LOGIN=0 ;;
+    --no-screentime) DO_ST=0 ;;
     --no-start) DO_START=0 ;;
     --uninstall) UNINSTALL=1 ;;
     -h | --help) usage; exit 0 ;;
@@ -257,6 +266,16 @@ uninstall() {
     for g in gtk-3.0 gtk-4.0; do
         has_block "$CONFIG_HOME/$g/gtk.css" "$CSS_B" && strip_block "$CONFIG_HOME/$g/gtk.css" "$CSS_B" "$CSS_E"
     done
+    if [[ -f $SCREENTIME_DIR/install.sh ]]; then
+        st_un=(--uninstall --yes)
+        ((DRY)) && st_un+=(--dry-run)
+        run_i env -C "$SCREENTIME_DIR" bash ./install.sh "${st_un[@]}" && ok "screen-time tracker removed (your data stays in $(tilde "$SCREENTIME_DIR"))"
+    elif [[ -f $ST_SERVICE ]]; then
+        run systemctl --user disable --now hypr-screentime.service >/dev/null 2>&1
+        run rm -f -- "$ST_SERVICE" "$ST_DESKTOP"
+        run systemctl --user daemon-reload
+        ok "stopped the screen-time tracker (your data stays in $(tilde "$SCREENTIME_DIR"))"
+    fi
 
     if pidof quickshell >/dev/null; then
         run pkill -x quickshell
@@ -329,14 +348,13 @@ LOOKS=(
     noto-fonts noto-fonts-emoji noto-fonts-cjk
     breeze-icons papirus-icon-theme adw-gtk-theme
 )
-EXTRA_REPO=(easyeffects kdeconnect zenity python)
+EXTRA_REPO=(easyeffects kdeconnect zenity)
 EXTRA_AUR=(mpvpaper glava ani-cli)
 declare -A EXTRA_DESC=(
     [firefox]="web browser"
     [easyeffects]="audio effects (switch in the Audio tab)"
     [kdeconnect]="phone card: battery, ring, send files"
     [zenity]="file picker for sending files to your phone"
-    [python]="screen-time GUI helper"
     [mpvpaper]="video / live wallpapers"
     [glava]="desktop audio visualizer"
     [ani-cli]="launcher \"a \" mode: watch anime"
@@ -382,6 +400,7 @@ install_yay() {
     [[ -n $AUR ]]
 }
 
+WANT_ST=0 ST_ASKED=0
 if ((DO_PACKAGES)); then
     step "Packages"
     # keep sudo alive for the whole run
@@ -391,6 +410,14 @@ if ((DO_PACKAGES)); then
         SUDO_KEEP=$!
     fi
 
+    if ((DO_ST)); then
+        info "The dashboard's Screen time tab is fed by a small tracker (hyprland-screen_time)."
+        if ask "Track screen time? (python + PySide6, runs as a user service)" Y; then
+            WANT_ST=1
+            SHELL_PKGS+=(python pyside6 libpulse) # what its installer would ask for on Arch
+        fi
+        ST_ASKED=1
+    fi
     mapfile -t NEED < <(missing "${DESKTOP[@]}" "${SHELL_PKGS[@]}" "${LOOKS[@]}")
     if ((${#NEED[@]})); then
         info "${B}${#NEED[@]} packages${R} to install: ${D}${NEED[*]}${R}"
@@ -463,6 +490,7 @@ elif ((!ARCH)); then
     step "Packages (install these yourself — Arch names)"
     info "${DESKTOP[*]} ${SHELL_PKGS[*]} ${LOOKS[*]}"
     info "optional: ${EXTRA_REPO[*]} ${EXTRA_AUR[*]}"
+    info "screen time: python pyside6 libpulse"
 fi
 
 # Hyprland 0.55+ is a must (Prism uses its Lua API)
@@ -557,6 +585,11 @@ KB=$(localectl status 2>/dev/null | awk -F': *' '/X11 Layout/ {print $2; exit}')
 LOCK=true
 ask "Use Prism's own lock screen? (no = hyprlock)" Y || LOCK=false
 
+# screen time (asked during the package step when packages are installed)
+if ((DO_ST && !ST_ASKED)); then
+    ask "Set up the screen-time tracker for the dashboard's Screen time tab?" Y && WANT_ST=1
+fi
+
 EXTRA_BINDS=""
 ((DO_HYPR && DO_BINDS)) && EXTRA_BINDS=$DEST/hypr/prism-binds.lua
 
@@ -594,7 +627,7 @@ else
         "matugenColors": $(json_str "$DEST/.state/colors.lua"),
         "binds": $(json_str "$HYPR_LUA"),
         "extraBinds": $(json_str "$EXTRA_BINDS"),
-        "screentime": "",
+        "screentime": $(json_str "$( ((WANT_ST)) && echo "$SCREENTIME_DIR")"),
         "screenshots": $(json_str "$PICTURES/Screenshots"),
         "recordings": $(json_str "$VIDEOS/Recordings")
     },
@@ -741,6 +774,92 @@ EOF
         fi
         ok "GTK: adw-gtk3 + Papirus icons, coloured from the wallpaper"
         THEME_GTK=1
+    fi
+fi
+
+# =========================================================== screen time ===
+# The tracker (https://github.com/Jack02134x/hyprland-screen_time) has its own
+# installer; Prism downloads it and hands over. Older checkouts without one get
+# a plain systemd user service written here instead.
+if ((WANT_ST)); then
+    step "Screen time"
+    if [[ -d $SCREENTIME_DIR/.git ]]; then
+        if run git -C "$SCREENTIME_DIR" pull --ff-only -q >>"$LOG" 2>&1; then
+            ok "tracker updated ($(tilde "$SCREENTIME_DIR"))"
+        else
+            warn "couldn't update the tracker (local changes?) — keeping the copy you have"
+        fi
+    elif [[ -e $SCREENTIME_DIR ]]; then
+        warn "$(tilde "$SCREENTIME_DIR") exists but isn't a git checkout — leaving it alone"
+    elif run git clone --depth 1 -q "$SCREENTIME_REPO" "$SCREENTIME_DIR" >>"$LOG" 2>&1; then
+        ok "downloaded the tracker to $(tilde "$SCREENTIME_DIR")"
+    else
+        warn "couldn't download $SCREENTIME_REPO — skipping screen time"
+        WANT_ST=0
+    fi
+fi
+
+if ((WANT_ST)); then
+    st_flags=(--yes)
+    ((DO_PACKAGES)) && st_flags+=(--deps)
+    ((DRY)) && st_flags+=(--dry-run)
+    if [[ -f $SCREENTIME_DIR/install.sh ]] || ((DRY)); then
+        if run_i env -C "$SCREENTIME_DIR" bash ./install.sh "${st_flags[@]}"; then
+            ok "tracker installed by its own installer"
+        else
+            warn "the tracker's installer failed — see the output above"
+        fi
+    else
+        write_file "$ST_SERVICE" <<EOF
+[Unit]
+Description=Hyprland screen time tracker
+Documentation=$SCREENTIME_REPO
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/env python3 $SCREENTIME_DIR/tracker.py
+Restart=always
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=10
+
+[Install]
+WantedBy=default.target
+EOF
+        run systemctl --user daemon-reload >/dev/null 2>&1
+        if run systemctl --user enable --now hypr-screentime.service >/dev/null 2>&1; then
+            ok "tracker running (systemctl --user status hypr-screentime)"
+        else
+            warn "couldn't start the tracker service — it starts on your next login"
+        fi
+        write_file "$ST_DESKTOP" <<EOF
+[Desktop Entry]
+Type=Application
+Name=Screen Time
+Comment=Hyprland screen time dashboard
+Exec=python3 $SCREENTIME_DIR/gui.py
+Icon=preferences-system-time
+Terminal=false
+Categories=Utility;
+StartupWMClass=hypr-screentime
+EOF
+    fi
+
+    # an existing config.json (re-runs, updates) gets the tracker path if it has none
+    if ((!DRY)) && [[ -f $DEST/config.json ]] && have python3; then
+        python3 - "$DEST/config.json" "$SCREENTIME_DIR" <<'PY'
+import json, sys
+path, folder = sys.argv[1], sys.argv[2]
+with open(path) as f:
+    cfg = json.load(f)
+paths = cfg.setdefault("paths", {})
+if not paths.get("screentime"):
+    paths["screentime"] = folder
+    with open(path, "w") as f:
+        json.dump(cfg, f, indent=4, sort_keys=True)
+PY
     fi
 fi
 

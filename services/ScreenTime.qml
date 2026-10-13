@@ -28,10 +28,26 @@ Singleton {
         return Qt.formatDate(d, "yyyy-MM-dd");
     }
 
+    // one day's {app: {detail: {hour: seconds}}}, focused time plus background
+    // audio time (the `audio` tree has the same layout; old files lack it)
+    function dayTree(key) {
+        const out = {};
+        for (const tree of [data.days ?? {}, data.audio ?? {}]) {
+            const d = tree[key] ?? {};
+            for (const app in d)
+                for (const detail in d[app])
+                    for (const h in d[app][detail]) {
+                        out[app] = out[app] ?? {};
+                        out[app][detail] = out[app][detail] ?? {};
+                        out[app][detail][h] = (out[app][detail][h] ?? 0) + d[app][detail][h];
+                    }
+        }
+        return out;
+    }
+
     function compute() {
-        const days = data.days ?? {};
         const key = dayKey(new Date());
-        const d = days[key] ?? {};
+        const d = dayTree(key);
         const hrs = new Array(24).fill(0);
         const list = [];
         let total = 0;
@@ -64,7 +80,7 @@ Singleton {
             dt.setDate(dt.getDate() - i);
             const k = dayKey(dt);
             let t = 0;
-            const dd = days[k] ?? {};
+            const dd = dayTree(k);
             for (const app in dd)
                 for (const det in dd[app])
                     for (const h in dd[app][det])
@@ -100,10 +116,18 @@ Singleton {
         onLoaded: {
             try {
                 const s = JSON.parse(text());
-                root.liveApp = s.app ?? "";
-                root.liveDetail = s.detail ?? "";
-                root.liveState = s.state ?? "";
+                // the tracker rewrites this at least every 5 s; older than 20 s means it's gone
+                const fresh = s.ts !== undefined && Date.now() / 1000 - s.ts < 20;
+                root.liveApp = fresh ? (s.app ?? "") : "";
+                root.liveDetail = fresh ? (s.detail ?? "") : "";
+                root.liveState = fresh ? (s.state ?? "") : "";
             } catch (e) {}
+        }
+        // deleted when Hyprland goes away
+        onLoadFailed: {
+            root.liveApp = "";
+            root.liveDetail = "";
+            root.liveState = "";
         }
     }
 
