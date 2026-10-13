@@ -12,6 +12,7 @@ Scope {
     readonly property bool focused: modelData === Panels.focusedScreen
 
     Drawer {
+        id: left
         modelData: root.modelData
         visible: Config.drawers.left && !Panels.capturing
         leftSide: true
@@ -20,13 +21,16 @@ Scope {
         open: Panels.controls && root.focused
         onRequestOpen: value => value ? Panels.show("controls") : (Panels.controls = false)
 
-        ControlsContent {
-            anchors.fill: parent
-            active: Panels.controls && root.focused
+        DrawerBody {
+            shown: left.shown
+            sourceComponent: ControlsContent {
+                active: Panels.controls && root.focused
+            }
         }
     }
 
     Drawer {
+        id: right
         modelData: root.modelData
         visible: Config.drawers.right && !Panels.capturing
         leftSide: false
@@ -35,9 +39,11 @@ Scope {
         open: Panels.sidebar && root.focused
         onRequestOpen: value => value ? Panels.show("sidebar") : (Panels.sidebar = false)
 
-        NotificationsContent {
-            anchors.fill: parent
-            active: Panels.sidebar && root.focused
+        DrawerBody {
+            shown: right.shown
+            sourceComponent: NotificationsContent {
+                active: Panels.sidebar && root.focused
+            }
         }
     }
 }

@@ -140,7 +140,7 @@ Item {
             Behavior on opacity { NumAnim {} }
             Image {
                 anchors.fill: parent
-                source: Media.art
+                source: parent.visible ? Media.art : ""
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
                 sourceSize.width: 256
@@ -201,141 +201,157 @@ Item {
 
         // ---------------- compact media ----------------
         Layer {
+            id: mediaLayer
             shown: root.mode === "media"
-            RowLayout {
+            // built only while this mode is on screen
+            Loader {
                 anchors.fill: parent
-                anchors.leftMargin: 6
-                anchors.rightMargin: 14
-                spacing: 10
+                active: mediaLayer.visible
+                sourceComponent: Item {
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 6
+                        anchors.rightMargin: 14
+                        spacing: 10
 
-                Disc {
-                    Layout.preferredWidth: root.barHeight - 10
-                    Layout.preferredHeight: root.barHeight - 10
-                }
-                Marquee {
-                    Layout.fillWidth: true
-                    text: Media.title + (Media.artist !== "" ? "  ·  " + Media.artist : "")
-                    pixelSize: 12
-                    weight: Font.DemiBold
-                    color: Theme.fg
-                }
-                Visualizer {
-                    Layout.preferredWidth: 46
-                    Layout.preferredHeight: 18
-                    count: 8
-                    spacing: 2
-                    gain: 1.2
+                        Disc {
+                            Layout.preferredWidth: root.barHeight - 10
+                            Layout.preferredHeight: root.barHeight - 10
+                        }
+                        Marquee {
+                            Layout.fillWidth: true
+                            text: Media.title + (Media.artist !== "" ? "  ·  " + Media.artist : "")
+                            pixelSize: 12
+                            weight: Font.DemiBold
+                            color: Theme.fg
+                        }
+                        Visualizer {
+                            Layout.preferredWidth: 46
+                            Layout.preferredHeight: 18
+                            count: 8
+                            spacing: 2
+                            gain: 1.2
+                        }
+                    }
                 }
             }
         }
 
         // ---------------- expanded media ----------------
         Layer {
+            id: fullLayer
             shown: root.mode === "mediaFull"
-            RowLayout {
+            // built only while this mode is on screen
+            Loader {
                 anchors.fill: parent
-                anchors.margins: 16
-                spacing: 16
-
-                ClippingRectangle {
-                    Layout.preferredWidth: 140
-                    Layout.preferredHeight: 140
-                    radius: 18
-                    color: Theme.surfaceHigh
-                    Image {
+                active: fullLayer.visible
+                sourceComponent: Item {
+                    RowLayout {
                         anchors.fill: parent
-                        source: Media.art
-                        fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
-                        sourceSize.width: 280
-                        sourceSize.height: 280
-                    }
-                    Icon {
-                        anchors.centerIn: parent
-                        visible: Media.art === ""
-                        icon: "music"
-                        size: 54
-                        color: Theme.primary
-                    }
-                }
+                        anchors.margins: 16
+                        spacing: 16
 
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    spacing: 4
-
-                    RowLayout {
-                        spacing: 6
-                        Icon {
-                            icon: Media.sourceIcon
-                            size: 13
-                            color: Theme.accent(5)
+                        ClippingRectangle {
+                            Layout.preferredWidth: 140
+                            Layout.preferredHeight: 140
+                            radius: 18
+                            color: Theme.surfaceHigh
+                            Image {
+                                anchors.fill: parent
+                                source: Media.art
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                                sourceSize.width: 280
+                                sourceSize.height: 280
+                            }
+                            Icon {
+                                anchors.centerIn: parent
+                                visible: Media.art === ""
+                                icon: "music"
+                                size: 54
+                                color: Theme.primary
+                            }
                         }
-                        Txt {
+
+                        ColumnLayout {
                             Layout.fillWidth: true
-                            text: Media.identity
-                            font.pixelSize: 11
-                            color: Theme.fgDim
-                        }
-                        Visualizer {
-                            Layout.preferredWidth: 60
-                            Layout.preferredHeight: 14
-                            count: 10
-                        }
-                    }
-                    Marquee {
-                        Layout.fillWidth: true
-                        text: Media.title || "Nothing playing"
-                        pixelSize: 17
-                        weight: Font.Bold
-                        color: Theme.fg
-                    }
-                    Txt {
-                        Layout.fillWidth: true
-                        text: Media.artist
-                        font.pixelSize: 13
-                        color: Theme.accent(1)
-                    }
-                    Item { Layout.fillHeight: true }
-                    WavyProgress {
-                        Layout.fillWidth: true
-                        value: Media.progress
-                        playing: Media.playing
-                        color: Theme.accent(0)
-                        onSeek: frac => Media.seek(frac)
-                    }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Txt {
-                            text: Utils.mmss(Media.position)
-                            font.pixelSize: 10
-                            font.family: Theme.mono
-                            color: Theme.fgDim
-                        }
-                        Item { Layout.fillWidth: true }
-                        IconBtn {
-                            icon: "skip_previous"
-                            size: 32
-                            onClicked: Media.previous()
-                        }
-                        IconBtn {
-                            icon: Media.playing ? "pause" : "play"
-                            size: 40
-                            active: true
-                            accent: Theme.accent(0)
-                            onClicked: Media.toggle()
-                        }
-                        IconBtn {
-                            icon: "skip_next"
-                            size: 32
-                            onClicked: Media.next()
-                        }
-                        Item { Layout.fillWidth: true }
-                        Txt {
-                            text: Utils.mmss(Media.length)
-                            font.pixelSize: 10
-                            font.family: Theme.mono
-                            color: Theme.fgDim
+                            Layout.fillHeight: true
+                            spacing: 4
+
+                            RowLayout {
+                                spacing: 6
+                                Icon {
+                                    icon: Media.sourceIcon
+                                    size: 13
+                                    color: Theme.accent(5)
+                                }
+                                Txt {
+                                    Layout.fillWidth: true
+                                    text: Media.identity
+                                    font.pixelSize: 11
+                                    color: Theme.fgDim
+                                }
+                                Visualizer {
+                                    Layout.preferredWidth: 60
+                                    Layout.preferredHeight: 14
+                                    count: 10
+                                }
+                            }
+                            Marquee {
+                                Layout.fillWidth: true
+                                text: Media.title || "Nothing playing"
+                                pixelSize: 17
+                                weight: Font.Bold
+                                color: Theme.fg
+                            }
+                            Txt {
+                                Layout.fillWidth: true
+                                text: Media.artist
+                                font.pixelSize: 13
+                                color: Theme.accent(1)
+                            }
+                            Item { Layout.fillHeight: true }
+                            WavyProgress {
+                                Layout.fillWidth: true
+                                value: Media.progress
+                                playing: Media.playing
+                                color: Theme.accent(0)
+                                onSeek: frac => Media.seek(frac)
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Txt {
+                                    text: Utils.mmss(Media.position)
+                                    font.pixelSize: 10
+                                    font.family: Theme.mono
+                                    color: Theme.fgDim
+                                }
+                                Item { Layout.fillWidth: true }
+                                IconBtn {
+                                    icon: "skip_previous"
+                                    size: 32
+                                    onClicked: Media.previous()
+                                }
+                                IconBtn {
+                                    icon: Media.playing ? "pause" : "play"
+                                    size: 40
+                                    active: true
+                                    accent: Theme.accent(0)
+                                    onClicked: Media.toggle()
+                                }
+                                IconBtn {
+                                    icon: "skip_next"
+                                    size: 32
+                                    onClicked: Media.next()
+                                }
+                                Item { Layout.fillWidth: true }
+                                Txt {
+                                    text: Utils.mmss(Media.length)
+                                    font.pixelSize: 10
+                                    font.family: Theme.mono
+                                    color: Theme.fgDim
+                                }
+                            }
                         }
                     }
                 }
@@ -410,162 +426,178 @@ Item {
 
         // ---------------- track change ----------------
         Layer {
+            id: trackLayer
             shown: root.mode === "track"
-            RowLayout {
+            // built only while this mode is on screen
+            Loader {
                 anchors.fill: parent
-                anchors.leftMargin: 12
-                anchors.rightMargin: 18
-                spacing: 12
-                ClippingRectangle {
-                    Layout.preferredWidth: 58
-                    Layout.preferredHeight: 58
-                    radius: 14
-                    color: Theme.surfaceHigh
-                    Image {
+                active: trackLayer.visible
+                sourceComponent: Item {
+                    RowLayout {
                         anchors.fill: parent
-                        source: Media.art
-                        fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
-                        sourceSize.width: 116
-                        sourceSize.height: 116
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 18
+                        spacing: 12
+                        ClippingRectangle {
+                            Layout.preferredWidth: 58
+                            Layout.preferredHeight: 58
+                            radius: 14
+                            color: Theme.surfaceHigh
+                            Image {
+                                anchors.fill: parent
+                                source: Media.art
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                                sourceSize.width: 116
+                                sourceSize.height: 116
+                            }
+                            Icon {
+                                anchors.centerIn: parent
+                                visible: Media.art === ""
+                                icon: "music"
+                                size: 26
+                                color: Theme.accent(0)
+                            }
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 1
+                            Txt {
+                                text: "NOW PLAYING"
+                                font.pixelSize: 9
+                                font.weight: Font.Black
+                                font.letterSpacing: 2
+                                color: Theme.accent(5)
+                            }
+                            Txt {
+                                Layout.fillWidth: true
+                                text: Media.title
+                                font.pixelSize: 15
+                                font.weight: Font.Bold
+                            }
+                            Txt {
+                                Layout.fillWidth: true
+                                text: Media.artist
+                                font.pixelSize: 12
+                                color: Theme.accent(1)
+                            }
+                        }
+                        Visualizer {
+                            Layout.preferredWidth: 40
+                            Layout.preferredHeight: 26
+                            count: 6
+                            gain: 1.2
+                        }
                     }
-                    Icon {
-                        anchors.centerIn: parent
-                        visible: Media.art === ""
-                        icon: "music"
-                        size: 26
-                        color: Theme.accent(0)
-                    }
-                }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 1
-                    Txt {
-                        text: "NOW PLAYING"
-                        font.pixelSize: 9
-                        font.weight: Font.Black
-                        font.letterSpacing: 2
-                        color: Theme.accent(5)
-                    }
-                    Txt {
-                        Layout.fillWidth: true
-                        text: Media.title
-                        font.pixelSize: 15
-                        font.weight: Font.Bold
-                    }
-                    Txt {
-                        Layout.fillWidth: true
-                        text: Media.artist
-                        font.pixelSize: 12
-                        color: Theme.accent(1)
-                    }
-                }
-                Visualizer {
-                    Layout.preferredWidth: 40
-                    Layout.preferredHeight: 26
-                    count: 6
-                    gain: 1.2
                 }
             }
         }
 
         // ---------------- notification ----------------
         Layer {
+            id: notifLayer
             shown: root.mode === "notif"
-            ColumnLayout {
+            // built only while this mode is on screen
+            Loader {
                 anchors.fill: parent
-                anchors.leftMargin: 14
-                anchors.rightMargin: 12
-                anchors.topMargin: 10
-                anchors.bottomMargin: 10
-                spacing: 8
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
-
-                    Rectangle {
-                        Layout.preferredWidth: 50
-                        Layout.preferredHeight: 50
-                        Layout.alignment: Qt.AlignTop
-                        radius: 16
-                        color: Theme.alpha(root.peek?.accent ?? Theme.primary, 0.2)
-                        readonly property string iconUrl: root.peek ? Notifs.iconFor(root.peek) : ""
-                        IconImage {
-                            id: peekImg
-                            anchors.centerIn: parent
-                            implicitSize: 34
-                            source: parent.iconUrl
-                            visible: parent.iconUrl !== ""
-                        }
-                        Icon {
-                            anchors.centerIn: parent
-                            visible: !peekImg.visible
-                            icon: root.peek?.glyph || "bell_ring"
-                            size: 24
-                            color: root.peek?.accent ?? Theme.primary
-                        }
-                    }
+                active: notifLayer.visible
+                sourceComponent: Item {
                     ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 1
+                        anchors.fill: parent
+                        anchors.leftMargin: 14
+                        anchors.rightMargin: 12
+                        anchors.topMargin: 10
+                        anchors.bottomMargin: 10
+                        spacing: 8
+
                         RowLayout {
                             Layout.fillWidth: true
-                            Txt {
+                            spacing: 12
+
+                            Rectangle {
+                                Layout.preferredWidth: 50
+                                Layout.preferredHeight: 50
+                                Layout.alignment: Qt.AlignTop
+                                radius: 16
+                                color: Theme.alpha(root.peek?.accent ?? Theme.primary, 0.2)
+                                readonly property string iconUrl: root.peek ? Notifs.iconFor(root.peek) : ""
+                                IconImage {
+                                    id: peekImg
+                                    anchors.centerIn: parent
+                                    implicitSize: 34
+                                    source: parent.iconUrl
+                                    visible: parent.iconUrl !== ""
+                                }
+                                Icon {
+                                    anchors.centerIn: parent
+                                    visible: !peekImg.visible
+                                    icon: root.peek?.glyph || "bell_ring"
+                                    size: 24
+                                    color: root.peek?.accent ?? Theme.primary
+                                }
+                            }
+                            ColumnLayout {
                                 Layout.fillWidth: true
-                                text: (root.peek?.appName ?? "") + (Notifs.popups.length > 1 ? "  ·  +" + (Notifs.popups.length - 1) + " more" : "")
-                                font.pixelSize: 11
-                                font.weight: Font.Bold
-                                color: root.peek?.accent ?? Theme.primary
+                                spacing: 1
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Txt {
+                                        Layout.fillWidth: true
+                                        text: (root.peek?.appName ?? "") + (Notifs.popups.length > 1 ? "  ·  +" + (Notifs.popups.length - 1) + " more" : "")
+                                        font.pixelSize: 11
+                                        font.weight: Font.Bold
+                                        color: root.peek?.accent ?? Theme.primary
+                                    }
+                                }
+                                Txt {
+                                    Layout.fillWidth: true
+                                    text: root.peek?.summary ?? ""
+                                    font.pixelSize: 14
+                                    font.weight: Font.DemiBold
+                                }
+                                Txt {
+                                    Layout.fillWidth: true
+                                    text: (root.peek?.body ?? "").replace(/<[^>]*>/g, "")
+                                    font.pixelSize: 12
+                                    color: Theme.fgDim
+                                    wrapMode: Text.Wrap
+                                    maximumLineCount: (root.peek?.actions?.length ?? 0) > 0 ? 1 : 2
+                                }
+                            }
+                            IconBtn {
+                                Layout.alignment: Qt.AlignTop
+                                icon: "close"
+                                size: 26
+                                iconSize: 13
+                                idleColor: Theme.alpha(Theme.fg, 0.08)
+                                tooltip: "Dismiss"
+                                onClicked: root.peek?.dismiss()
                             }
                         }
-                        Txt {
-                            Layout.fillWidth: true
-                            text: root.peek?.summary ?? ""
-                            font.pixelSize: 14
-                            font.weight: Font.DemiBold
-                        }
-                        Txt {
-                            Layout.fillWidth: true
-                            text: (root.peek?.body ?? "").replace(/<[^>]*>/g, "")
-                            font.pixelSize: 12
-                            color: Theme.fgDim
-                            wrapMode: Text.Wrap
-                            maximumLineCount: (root.peek?.actions?.length ?? 0) > 0 ? 1 : 2
-                        }
-                    }
-                    IconBtn {
-                        Layout.alignment: Qt.AlignTop
-                        icon: "close"
-                        size: 26
-                        iconSize: 13
-                        idleColor: Theme.alpha(Theme.fg, 0.08)
-                        tooltip: "Dismiss"
-                        onClicked: root.peek?.dismiss()
-                    }
-                }
 
-                // actions
-                RowLayout {
-                    visible: (root.peek?.actions?.length ?? 0) > 0
-                    Layout.fillWidth: true
-                    Layout.leftMargin: 62
-                    spacing: 6
-                    Repeater {
-                        model: root.peek?.actions?.slice(0, 3) ?? []
-                        Btn {
-                            required property var modelData
-                            required property int index
-                            text: modelData.text || "Open"
-                            accent: root.peek?.accent ?? Theme.primary
-                            filled: index === 0
-                            implicitHeight: 28
-                            fontSize: 11
-                            pad: 12
-                            onClicked: root.peek?.invoke(modelData)
+                        // actions
+                        RowLayout {
+                            visible: (root.peek?.actions?.length ?? 0) > 0
+                            Layout.fillWidth: true
+                            Layout.leftMargin: 62
+                            spacing: 6
+                            Repeater {
+                                model: root.peek?.actions?.slice(0, 3) ?? []
+                                Btn {
+                                    required property var modelData
+                                    required property int index
+                                    text: modelData.text || "Open"
+                                    accent: root.peek?.accent ?? Theme.primary
+                                    filled: index === 0
+                                    implicitHeight: 28
+                                    fontSize: 11
+                                    pad: 12
+                                    onClicked: root.peek?.invoke(modelData)
+                                }
+                            }
+                            Item { Layout.fillWidth: true }
                         }
                     }
-                    Item { Layout.fillWidth: true }
                 }
             }
         }

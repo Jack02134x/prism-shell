@@ -7,6 +7,8 @@ import qs.services
 // Full-screen layer surface on the focused monitor used by every popup panel.
 // `progress` animates 0 -> 1 when opened; the window stays mapped until the
 // closing animation finishes. Esc or a click on the scrim calls dismiss().
+// Panels are created on demand (see Lazy in shell.qml), usually already open,
+// so the open animation and opened() also run on creation.
 PanelWindow {
     id: win
 
@@ -21,7 +23,7 @@ PanelWindow {
     readonly property Item contentRoot: contentScope
 
     property var targetScreen: null
-    property real progress: open ? 1 : 0
+    property real progress: 0
 
     signal dismiss
     signal opened
@@ -34,11 +36,16 @@ PanelWindow {
         }
     }
 
-    onOpenChanged: {
-        if (open) {
-            targetScreen = Panels.focusedScreen;
-            Qt.callLater(() => win.opened());
-        }
+    function handleOpen() {
+        targetScreen = Panels.focusedScreen;
+        Qt.callLater(() => win.opened());
+    }
+    onOpenChanged: if (open) handleOpen()
+    Component.onCompleted: {
+        if (open)
+            handleOpen();
+        // bind after creation so a panel created open still animates in from 0
+        progress = Qt.binding(() => open ? 1 : 0);
     }
 
     screen: targetScreen ?? Panels.focusedScreen

@@ -9,6 +9,7 @@ import QtQuick
 import Quickshell
 import qs.common
 import qs.services
+import qs.widgets
 import qs.modules.bar
 import qs.modules.cheatsheet
 import qs.modules.corners
@@ -40,18 +41,18 @@ ShellRoot {
         Corners {}
     }
 
-    // popups (shown on the focused monitor)
+    // popups (shown on the focused monitor), built only while open (+20 s)
     // notifications pop up in the bar's island (no separate toasts)
-    Launcher {}
-    Dashboard {}
-    Overview {}
-    WallpaperPicker {}
-    ScreenshotMenu {}
-    RecordMenu {}
-    Cheatsheet {}
-    QuickEdit {}
-    Switcher {}
-    PowerMenu {}
+    LazyPanel { want: Panels.launcher; Launcher {} }
+    LazyPanel { want: Panels.dashboard; Dashboard {} }
+    LazyPanel { want: Panels.overview; Overview {} }
+    LazyPanel { want: Panels.wallpapers; WallpaperPicker {} }
+    LazyPanel { want: Panels.screenshot; ScreenshotMenu {} }
+    LazyPanel { want: Panels.record; RecordMenu {} }
+    LazyPanel { want: Panels.cheatsheet; Cheatsheet {} }
+    LazyPanel { want: Panels.edit; QuickEdit {} }
+    LazyPanel { want: Panels.switcher; Switcher {} }
+    LazyPanel { want: Panels.power; PowerMenu {} }
     Lock {}
 
     LazyLoader {

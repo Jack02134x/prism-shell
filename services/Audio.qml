@@ -18,14 +18,14 @@ Singleton {
     readonly property real micVolume: source?.audio?.volume ?? 0
     readonly property bool micMuted: source?.audio?.muted ?? false
 
-    readonly property var sinks: Pipewire.nodes.values.filter(n => n.audio && n.isSink && !n.isStream)
-    readonly property var sources: Pipewire.nodes.values.filter(n => n.audio && !n.isSink && !n.isStream && !(n.name ?? "").includes(".monitor"))
+    readonly property var sinks: (Pipewire.nodes?.values ?? []).filter(n => n.audio && n.isSink && !n.isStream)
+    readonly property var sources: (Pipewire.nodes?.values ?? []).filter(n => n.audio && !n.isSink && !n.isStream && !(n.name ?? "").includes(".monitor"))
     // apps playing audio: playback streams are both "stream" and "sink" to Quickshell
     // (media.class isn't available until a node is tracked, so don't filter on it)
-    readonly property var streams: Pipewire.nodes.values.filter(n => n.audio && n.isStream && n.isSink)
+    readonly property var streams: (Pipewire.nodes?.values ?? []).filter(n => n.audio && n.isStream && n.isSink)
 
     PwObjectTracker {
-        objects: [root.sink, root.source].concat(root.sinks).concat(root.sources).concat(root.streams)
+        objects: [root.sink, root.source].concat(root.sinks ?? []).concat(root.sources ?? []).concat(root.streams ?? []).filter(o => !!o)
     }
 
     readonly property string icon: muted ? "volume_off" : volume > 0.66 ? "volume_high" : volume > 0.33 ? "volume_medium" : volume > 0 ? "volume_low" : "volume_mute"

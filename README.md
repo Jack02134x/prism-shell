@@ -214,6 +214,10 @@ cd ~/.config/quickshell && git pull && ./install.sh   # update; keeps config.jso
   `matugen image <wallpaper>` and look for errors.
 - **Two sets of notifications:** another notification daemon is running. Stop it, or set
   `notifications.server` to `false`.
+- **Hybrid laptop (Intel/AMD + NVIDIA):** Quickshell renders on the integrated GPU, but the
+  graphics loader still loads NVIDIA's libraries first (about 60 MB). Start it with
+  `__EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json quickshell` to skip
+  them. Don't do this if NVIDIA is your only GPU.
 - **Icons show as boxes:** install `ttf-nerd-fonts-symbols` and run `fc-cache -f`.
 
 ## Credits
