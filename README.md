@@ -2,14 +2,34 @@
 
 **A Quickshell desktop shell for Hyprland.** The colours come from your wallpaper and everything moves.
 
-<!-- Screenshots: drop images in assets/ and uncomment
-![desktop](assets/desktop.png)
-![dashboard](assets/dashboard.png)
--->
+![Prism desktop](assets/desktop.jpg)
 
 Prism replaces your bar, launcher, notification daemon, OSDs, lock screen and power menu with one
 shell. Pick a wallpaper and [matugen](https://github.com/InioX/matugen) recolours all of it. The
 palette cross-fades instead of snapping.
+
+<p align="center">
+  <img src="assets/island-player.png" alt="The island expanded into a music player" width="560">
+</p>
+
+![The bar](assets/bar.png)
+
+## Screenshots
+
+| | |
+| :---: | :---: |
+| ![Dashboard home](assets/dashboard-home.jpg) | ![Now playing](assets/dashboard-media.jpg) |
+| **Dashboard**: toggles, media, weather, screen time, phone | **Now playing**: vinyl disc and a live visualizer |
+| ![System monitor](assets/dashboard-system.jpg) | ![Launcher](assets/launcher.jpg) |
+| **System**: CPU, memory, temperatures, network, processes | **Launcher**: apps, commands, clipboard, emoji, maths |
+| ![Workspace overview](assets/overview.jpg) | ![Wallpaper picker](assets/wallpapers.jpg) |
+| **Overview**: live previews, drag windows between workspaces | **Wallpapers**: coverflow picker that recolours everything |
+| ![Control drawer](assets/controls.jpg) | ![Notification centre](assets/sidebar.jpg) |
+| **Left drawer**: sliders, quick toggles, media | **Right drawer**: calendar and notifications |
+| ![Power menu](assets/power.jpg) | ![Lock screen](assets/lock.jpg) |
+| **Power menu** | **Lock screen** |
+| ![Keybind cheatsheet](assets/cheatsheet.jpg) | ![Screenshot menu](assets/screenshot-menu.jpg) |
+| **Cheatsheet**, generated from your Hyprland binds | **Capture**: region / window / screen, recording, colour picker |
 
 ## Features
 

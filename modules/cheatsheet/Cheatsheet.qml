@@ -50,7 +50,7 @@ Overlay {
                     font.family: Theme.display
                 }
                 Txt {
-                    text: "read live from " + Config.paths.binds.replace(Config.home, "~")
+                    text: "read live from your Hyprland config"
                     font.pixelSize: 11
                     color: Theme.fgDim
                 }
