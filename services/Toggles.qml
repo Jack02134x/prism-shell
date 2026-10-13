@@ -37,7 +37,7 @@ Singleton {
 
     // ---- EasyEffects: on = running in the background, off = fully killed ----
     // state comes from PipeWire (its virtual sink exists only while it runs)
-    readonly property bool easyEffects: (Pipewire.nodes?.values ?? []).some(n => n.name === "easyeffects_sink")
+    readonly property bool easyEffects: (Pipewire.nodes?.values ?? []).some(n => n?.name === "easyeffects_sink")
     function toggleEasyEffects() {
         if (easyEffects) {
             Quickshell.execDetached(["sh", "-c", "easyeffects -q; sleep 2; pkill -x easyeffects; pkill -f '^easyeffects'"]);

@@ -60,6 +60,50 @@ Item {
         }
     }
 
+    // minutes stepper for one idle stage (0 = never)
+    component IdleStep: RowLayout {
+        id: st
+        property string icon
+        property string title
+        property int seconds
+        property int maxMinutes: 60
+        signal picked(int seconds)
+        readonly property int minutes: Math.round(seconds / 60)
+        Layout.fillWidth: true
+        spacing: 10
+        Icon {
+            icon: st.icon
+            size: 16
+            color: Theme.accent(6)
+            Layout.leftMargin: 9
+        }
+        Txt {
+            Layout.fillWidth: true
+            text: st.title
+        }
+        IconBtn {
+            icon: "minus"
+            size: 28
+            idleColor: Theme.alpha(Theme.fg, 0.08)
+            onClicked: st.picked(Math.max(0, st.minutes - 1) * 60)
+        }
+        Txt {
+            Layout.preferredWidth: 44
+            horizontalAlignment: Text.AlignHCenter
+            text: st.minutes > 0 ? st.minutes + "m" : "never"
+            font.pixelSize: 14
+            font.weight: Font.Black
+            font.family: Theme.mono
+            color: st.minutes > 0 ? Theme.accent(6) : Theme.fgDim
+        }
+        IconBtn {
+            icon: "plus"
+            size: 28
+            idleColor: Theme.alpha(Theme.fg, 0.08)
+            onClicked: st.picked(Math.min(st.maxMinutes, st.minutes + 1) * 60)
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 14
@@ -353,6 +397,62 @@ Item {
                             idleColor: Theme.alpha(Theme.fg, 0.08)
                             onClicked: Config.focus.workMinutes = Math.min(90, Config.focus.workMinutes + 5)
                         }
+                    }
+                    SettingRow {
+                        icon: "sleep"
+                        title: "Idle: dim, lock, screens off"
+                        sub: Idle.hypridleRunning ? "hypridle is running, so it's in charge — stop it to use this" : "Media playing, caffeine and fullscreen video keep the screen awake"
+                        checked: Config.idle.enabled
+                        accentIndex: 6
+                        onToggled: v => Config.idle.enabled = v
+                    }
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        visible: Config.idle.enabled
+                        spacing: 4
+                        IdleStep {
+                            icon: "brightness_5"
+                            title: "Dim the screen after"
+                            seconds: Config.idle.dimAfter
+                            onPicked: v => Config.idle.dimAfter = v
+                        }
+                        IdleStep {
+                            icon: "lock_outline"
+                            title: "Lock after"
+                            seconds: Config.idle.lockAfter
+                            onPicked: v => Config.idle.lockAfter = v
+                        }
+                        IdleStep {
+                            icon: "monitor_off"
+                            title: "Turn screens off after"
+                            seconds: Config.idle.screenOffAfter
+                            onPicked: v => Config.idle.screenOffAfter = v
+                        }
+                        IdleStep {
+                            icon: "power_sleep"
+                            title: "Suspend after"
+                            seconds: Config.idle.suspendAfter
+                            maxMinutes: 180
+                            onPicked: v => Config.idle.suspendAfter = v
+                        }
+                    }
+                    SettingRow {
+                        visible: Config.idle.enabled
+                        icon: "music"
+                        title: "Playing media counts as use"
+                        sub: "Music or a video playing anywhere keeps the screen on (like the screen-time tracker)"
+                        checked: Config.idle.mediaKeepsAwake
+                        accentIndex: 6
+                        onToggled: v => Config.idle.mediaKeepsAwake = v
+                    }
+                    SettingRow {
+                        visible: Config.idle.enabled
+                        icon: "lock_clock"
+                        title: "Lock before sleeping"
+                        sub: "Lid closed or suspend: the lock screen is up before the laptop sleeps"
+                        checked: Config.idle.lockBeforeSleep
+                        accentIndex: 6
+                        onToggled: v => Config.idle.lockBeforeSleep = v
                     }
                     SettingRow {
                         icon: "lock"

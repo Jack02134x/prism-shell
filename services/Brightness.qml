@@ -18,6 +18,8 @@ Singleton {
     readonly property string icon: value > 0.66 ? "brightness_7" : value > 0.33 ? "brightness_6" : "brightness_5"
 
     property bool ownChange: false
+    // set while something else (idle dimming) moves the backlight: no OSD
+    property bool quiet: false
 
     function set(v) {
         v = Utils.clamp(v, 0.01, 1);
@@ -53,7 +55,7 @@ Singleton {
                 return;
             const external = !root.ownChange;
             root.raw = v;
-            if (external)
+            if (external && !root.quiet)
                 Osd.show("brightness", root.icon, "Brightness", root.value);
         }
     }

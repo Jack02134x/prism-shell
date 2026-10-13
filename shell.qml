@@ -71,5 +71,6 @@ ShellRoot {
         Emojis.all;
         Breaks.enabled;
         Focus.active;
+        Idle.active;
     }
 }

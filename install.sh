@@ -17,7 +17,8 @@
 #    4. config.json with your terminal / editor / browser / name
 #    5. matugen: wallpaper colours for Prism, Hyprland borders, kitty and GTK apps
 #    6. Hyprland: a full starter config if you don't have one yet; Prism's
-#       autostart + keybinds either way; hypridle (dim, lock, screens off)
+#       autostart + keybinds either way (idle — dim, lock, screens off — is
+#       built into Prism, so no hypridle)
 #    7. kitty + GTK look, Hyprland on login (tty1), 10 wallpapers, first palette
 #    8. screen time: the hyprland-screen_time tracker (systemd user service) that
 #       feeds the dashboard's Screen time tab, plus its GUI in the app launcher
@@ -192,7 +193,7 @@ Usage: install.sh [options]
   -y, --yes          accept every default, don't ask
   -n, --dry-run      show what would happen, change nothing
       --no-packages  skip installing packages
-      --no-hypr      don't touch ~/.config/hypr (no config, autostart, binds, hypridle)
+      --no-hypr      don't touch ~/.config/hypr (no config, autostart, binds)
       --no-binds     autostart only, keep your own keybinds
       --no-apps      don't theme kitty / GTK
       --no-login     don't start Hyprland automatically on tty1
@@ -253,10 +254,6 @@ uninstall() {
         backup "$MATUGEN_CONF"
         strip_block "$MATUGEN_CONF" "$SH_B" "$SH_E"
         ok "removed Prism's templates from matugen/config.toml"
-    fi
-    if [[ -f $HYPR_DIR/hypridle.conf && -f $DEST/hypr/hypridle.conf ]] && cmp -s "$HYPR_DIR/hypridle.conf" "$DEST/hypr/hypridle.conf"; then
-        run rm -f -- "$HYPR_DIR/hypridle.conf"
-        ok "removed Prism's hypridle.conf (unchanged)"
     fi
     for f in $(login_files); do
         has_block "$f" "$SH_B" && { strip_block "$f" "$SH_B" "$SH_E"; ok "Hyprland no longer starts from $(tilde "$f")"; }
@@ -341,7 +338,7 @@ SHELL_PKGS=(
     matugen awww cava
     wl-clipboard cliphist grim slurp wf-recorder hyprpicker
     brightnessctl playerctl imagemagick ffmpeg ffmpegthumbnailer
-    hypridle hyprlock libnotify curl git
+    hyprlock libnotify curl git
 )
 LOOKS=(
     ttf-nerd-fonts-symbols ttf-jetbrains-mono-nerd ttf-roboto adwaita-fonts
@@ -697,20 +694,15 @@ if ((DO_HYPR)); then
         info "${D}Prism's binds replace whatever those keys did before — SUPER+/ lists them, hypr/prism-binds.lua changes them${R}"
     fi
 
-    # idle: dim -> lock -> screens off
-    if [[ -f $HYPR_DIR/hypridle.conf ]] && ! cmp -s "$HYPR_DIR/hypridle.conf" "$DEST/hypr/hypridle.conf"; then
-        ok "keeping your hypridle.conf (tip: lock_cmd = qs ipc call lock lock)"
-    else
-        run cp -- "$DEST/hypr/hypridle.conf" "$HYPR_DIR/hypridle.conf"
-        ok "hypridle: dim at 3 min · lock at 4 · screens off at 5"
-    fi
+    # idle (dim -> lock -> screens off) is built into Prism; hypridle would do it twice
+    ok "idle: dim at 3 min · lock at 4 · screens off at 5 (Dashboard → Settings to change)"
 
     # things that fight Prism for the same job
     declare -A ROLE=([waybar]="bar" [swaync]="notifications" [mako]="notifications" [dunst]="notifications"
-        [hyprpaper]="wallpaper" [swww-daemon]="wallpaper" [ags]="shell" [eww]="widgets")
+        [hyprpaper]="wallpaper" [swww-daemon]="wallpaper" [hypridle]="idle" [ags]="shell" [eww]="widgets")
     found=0
     for p in "${!ROLE[@]}"; do
-        refs=$(grep -rlsE "^[^-#]*\b$p\b" "$HYPR_DIR" --include='*.lua' --include='*.conf' 2>/dev/null | grep -v hypridle | tr '\n' ' ')
+        refs=$(grep -rlsE "^[^-#]*\b$p\b" "$HYPR_DIR" --include='*.lua' --include='*.conf' 2>/dev/null | grep -v "hypridle.conf" | tr '\n' ' ')
         running=0
         pgrep -x "$p" >/dev/null 2>&1 && running=1
         ((running)) || [[ -n $refs ]] || continue
@@ -956,7 +948,6 @@ if ((DO_START && IN_HYPR)); then
         ((DO_HYPR)) && run hyprctl reload >/dev/null
         pgrep -f 'wl-paste --type text --watch' >/dev/null || run setsid -f wl-paste --type text --watch cliphist store
         pgrep -f 'wl-paste --type image --watch' >/dev/null || run setsid -f wl-paste --type image --watch cliphist store
-        [[ -f $HYPR_DIR/hypridle.conf ]] && { pidof hypridle >/dev/null || run setsid -f hypridle >/dev/null 2>&1; }
         pidof quickshell >/dev/null && run pkill -x quickshell && { ((DRY)) || sleep 0.5; }
         run setsid -f quickshell >/dev/null 2>&1
         ok "Prism is running"

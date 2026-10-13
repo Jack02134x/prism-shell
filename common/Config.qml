@@ -29,6 +29,7 @@ Singleton {
     property alias battery: adapter.battery
     property alias focus: adapter.focus
     property alias breaks: adapter.breaks
+    property alias idle: adapter.idle
 
     property bool loaded: false
 
@@ -160,6 +161,20 @@ Singleton {
                 // 20-20-20: after N minutes of non-idle use, look away for 20 s
                 property bool eyeReminder: true
                 property int everyMinutes: 20
+            }
+
+            property JsonObject idle: JsonObject {
+                // Prism's own idle manager (instead of hypridle). Seconds; 0 = never.
+                property bool enabled: true
+                property int dimAfter: 180
+                property int dimTo: 10 // backlight %, while dimmed
+                property int lockAfter: 240
+                property int screenOffAfter: 300
+                property int suspendAfter: 0
+                // media playing (any MPRIS player: music, videos) counts as being in use
+                property bool mediaKeepsAwake: true
+                // lock the screen before the system suspends
+                property bool lockBeforeSleep: true
             }
 
             property JsonObject battery: JsonObject {
