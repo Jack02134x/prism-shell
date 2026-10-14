@@ -339,6 +339,7 @@ SHELL_PKGS=(
     wl-clipboard cliphist grim slurp wf-recorder hyprpicker
     brightnessctl playerctl imagemagick ffmpeg ffmpegthumbnailer
     hyprlock libnotify curl git
+    python pyside6 # apps/prism-clock (the floating clock / timer / alarms)
 )
 LOOKS=(
     ttf-nerd-fonts-symbols ttf-jetbrains-mono-nerd ttf-roboto adwaita-fonts
@@ -411,7 +412,7 @@ if ((DO_PACKAGES)); then
         info "The dashboard's Screen time tab is fed by a small tracker (hyprland-screen_time)."
         if ask "Track screen time? (python + PySide6, runs as a user service)" Y; then
             WANT_ST=1
-            SHELL_PKGS+=(python pyside6 libpulse) # what its installer would ask for on Arch
+            SHELL_PKGS+=(libpulse) # pactl, for counting audio; python + pyside6 are already in
         fi
         ST_ASKED=1
     fi
@@ -552,7 +553,7 @@ else
     ok "copied Prism"
 fi
 run mkdir -p "$DEST/.state" "$DEST/.cache"
-run chmod +x "$DEST/install.sh" "$DEST/scripts/thumbs.sh" 2>/dev/null
+run chmod +x "$DEST/install.sh" "$DEST/scripts/thumbs.sh" "$DEST/apps/prism-clock/prism_clock.py" 2>/dev/null
 
 # ================================================================ config ===
 step "Personalising"

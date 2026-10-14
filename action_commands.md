@@ -30,6 +30,7 @@ rather than adding a second bind for the same key, or both commands will run.
 | Quick edit (open favourite folders in your editor) | `qs ipc call edit toggle` |
 | Keybind cheatsheet | `qs ipc call cheatsheet toggle` |
 | Window switcher (live previews, alt-tab style) | `qs ipc call switcher toggle` |
+| Floating clock (timer, stopwatch, alarms, focus) | `qs ipc call clock toggle` (or `clock tab timer`, `clock tab alarms`, …) |
 
 ## Direct actions
 
@@ -50,6 +51,9 @@ rather than adding a second bind for the same key, or both commands will run.
 | Play / pause | `qs ipc call media playPause` |
 | Next track | `qs ipc call media next` |
 | Previous track | `qs ipc call media previous` |
+| Start a timer | `qs ipc call clock timer 25` (minutes; `0` cancels it) |
+| Stopwatch start/pause | `qs ipc call clock stopwatch` |
+| Stop / snooze a ringing alarm or timer | `qs ipc call clock stop` / `qs ipc call clock snooze` |
 | Focus timer start/stop (Pomodoro) | `qs ipc call focus toggle` |
 | Focus pause/resume | `qs ipc call focus pause` |
 | Skip to next focus/break phase | `qs ipc call focus skip` |

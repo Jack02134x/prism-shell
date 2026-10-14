@@ -34,6 +34,7 @@ Singleton {
         { name: "Clipboard History", desc: "Search cliphist", icon: "clipboard_text_outline", kw: "paste copy", run: () => Panels.openLauncher(">") },
         { name: "Emoji Picker", desc: "Search and copy emoji", icon: "emoticon_happy_outline", kw: "emoji smiley", run: () => Panels.openLauncher(":") },
         { name: "Keybind Cheatsheet", desc: "Every Hyprland bind", icon: "keyboard", kw: "shortcuts keys help", run: () => Panels.show("cheatsheet") },
+        { name: "Clock", desc: "Floating clock: timer, stopwatch, alarms", icon: "alarm", kw: "timer stopwatch alarm countdown clock", run: () => Chrono.toggle() },
         { name: "Focus Timer", desc: "Pomodoro: " + Config.focus.workMinutes + " min focus with " + Config.focus.noise + " noise", icon: "timer_outline", kw: "pomodoro study focus", run: () => Focus.toggle() },
         { name: "Window Switcher", desc: "All windows with live previews", icon: "dock_window", kw: "alt tab switch windows", run: () => Panels.show("switcher") },
         { name: "Light / Dark Theme", desc: "Switch the whole system's matugen scheme", icon: "theme_light_dark", kw: "theme light dark mode", run: () => Wallpapers.toggleMode() },

@@ -83,6 +83,39 @@ Scope {
         }
     }
 
+    // the clock is a Python app (apps/prism-clock); these just forward to it
+    IpcHandler {
+        target: "clock"
+        function toggle(): void {
+            Chrono.toggle();
+        }
+        function open(): void {
+            Chrono.show("");
+        }
+        function close(): void {
+            Chrono.hide();
+        }
+        // clock | timer | stopwatch | alarms | settings
+        function tab(name: string): void {
+            Chrono.show(name);
+        }
+        // start a timer, e.g. `qs ipc call clock timer 25`
+        function timer(minutes: int): void {
+            Chrono.timer(minutes);
+            Osd.show("toggle", "timer_sand", "Timer · " + minutes + " min", -1);
+        }
+        function stopwatch(): void {
+            Chrono.stopwatch();
+        }
+        // stop whatever is ringing
+        function stop(): void {
+            Chrono.stopRinging();
+        }
+        function snooze(): void {
+            Chrono.snooze();
+        }
+    }
+
     IpcHandler {
         target: "focus"
         function toggle(): void {

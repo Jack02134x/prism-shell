@@ -72,5 +72,6 @@ ShellRoot {
         Breaks.enabled;
         Focus.active;
         Idle.active;
+        Chrono.loaded;
     }
 }

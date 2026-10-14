@@ -202,6 +202,18 @@ Flickable {
             }
             QuickTile {
                 Layout.fillWidth: true
+                icon: Chrono.timerRunning ? "timer_sand" : Chrono.swRunning ? "timer_outline" : "alarm"
+                label: "Clock"
+                sub: Chrono.timerRunning ? Utils.hms(Chrono.timerLeft / 1000) + " left" : Chrono.swRunning ? Utils.hms(Chrono.swElapsed / 1000) : Chrono.nextAlarm ? "Alarm in " + Utils.human(Chrono.nextAlarm.inMs / 1000) : "Timer · alarms"
+                checked: Chrono.open || Chrono.timerRunning || Chrono.swRunning
+                accent: Theme.grad1
+                onClicked: {
+                    Chrono.toggle();
+                    Panels.controls = false;
+                }
+            }
+            QuickTile {
+                Layout.fillWidth: true
                 icon: "tune_variant"
                 label: "EasyEffects"
                 sub: Toggles.easyEffects ? "Running" : "Off"

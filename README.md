@@ -68,6 +68,11 @@ palette cross-fades instead of snapping.
   - Light/dark mode and colour-scheme picker (the whole system follows).
 - **Capture**: screenshot (region / window / screen) and screen-recording menus.
 - **Session**: lock screen, polkit agent, power menu.
+- **Clock**: a floating window, written in Python, for timer, stopwatch (laps) and alarms (repeat days,
+  snooze). You pick the alarm tone: built-in tones, system sounds or your own file. It can be pinned
+  to every workspace or kept on one, and shrinks to a mini pill that shows whatever is counting. It
+  keeps time in the background, and the bar shows what's running. Open it from the alarm button
+  next to the bar clock, by right-clicking the clock, or with `SUPER + ALT + K`.
 - **Extras**:
   - Pomodoro focus timer with study noise
   - 20-20-20 eye-break reminders

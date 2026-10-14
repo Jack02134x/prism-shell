@@ -6,3 +6,6 @@ config.json
 # personal notes
 changes_to_make.txt
 *.bak-*
+
+# python
+__pycache__/

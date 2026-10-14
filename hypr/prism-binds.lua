@@ -46,6 +46,7 @@ bind(mainMod .. " + SHIFT + ALT + R",  hl.dsp.exec_cmd("qs ipc call record stop"
 ---- TOGGLES ----
 bind(mainMod .. " + ALT + T",          hl.dsp.exec_cmd("qs ipc call theme toggle"))
 bind(mainMod .. " + ALT + F",          hl.dsp.exec_cmd("qs ipc call focus toggle"))
+bind(mainMod .. " + ALT + K",          hl.dsp.exec_cmd("qs ipc call clock toggle"))
 bind(mainMod .. " + ALT + N",          hl.dsp.exec_cmd("qs ipc call toggle dnd"))
 bind(mainMod .. " + CTRL + N",         hl.dsp.exec_cmd("qs ipc call notify clear"))
 bind(mainMod .. " + ALT + C",          hl.dsp.exec_cmd("qs ipc call toggle caffeine"))

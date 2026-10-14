@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Regenerate common/Icons.qml.
 
-Scans every .qml file for string literals that name a Symbols Nerd Font glyph
+Scans every .qml file (and the Python apps in apps/) for string literals that name a Symbols Nerd Font glyph
 ("wifi" -> md-wifi, or a full name such as "weather-day_sunny") and writes a
 small lookup singleton with just those glyphs.
 """
@@ -25,10 +25,14 @@ for s in EXTRA:
         found[s] = names["md-" + s]
 
 literal = re.compile(r'"([a-z0-9_\-]+)"')
-for qml in ROOT.rglob("*.qml"):
-    if qml.name == "Icons.qml" or "/.cache/" in str(qml):
+# the QML shell, plus the Python apps in apps/ (they read the same table)
+sources = [p for p in ROOT.rglob("*.qml") if p.name != "Icons.qml"] + list((ROOT / "apps").rglob("*.py"))
+py_literal = re.compile(r"[\"']([a-z0-9_\-]+)[\"']")
+for src in sources:
+    if "/.cache/" in str(src):
         continue
-    for s in literal.findall(qml.read_text()):
+    pattern = py_literal if src.suffix == ".py" else literal
+    for s in pattern.findall(src.read_text()):
         if "md-" + s in names:
             found[s] = names["md-" + s]
         elif s in names and "-" in s:

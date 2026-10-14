@@ -329,6 +329,56 @@ RowLayout {
         onClicked: Wallpapers.toggleMode()
     }
 
+    // ---- floating clock: shows what's counting, pulses while ringing ----
+    Rectangle {
+        id: chronoBtn
+        readonly property bool counting: Chrono.timerRunning || Chrono.swRunning
+        readonly property bool ringing: Chrono.ringing !== null
+        implicitWidth: chronoRow.implicitWidth + 16
+        implicitHeight: 30
+        radius: 15
+        color: ringing ? Theme.alpha(Theme.grad1, 0.35) : Chrono.open || counting ? Theme.alpha(Theme.grad1, chronoHover.hovered ? 0.24 : 0.14) : Theme.alpha(Theme.primary, chronoHover.hovered ? 0.16 : 0)
+        Behavior on color { ColAnim {} }
+        Behavior on implicitWidth { NumAnim { duration: Motion.normal; easing.bezierCurve: Motion.spatial } }
+        SequentialAnimation on opacity {
+            running: chronoBtn.ringing
+            loops: Animation.Infinite
+            onStopped: chronoBtn.opacity = 1
+            NumberAnimation { to: 0.45; duration: 380 }
+            NumberAnimation { to: 1; duration: 380 }
+        }
+        Row {
+            id: chronoRow
+            anchors.centerIn: parent
+            spacing: 5
+            Icon {
+                anchors.verticalCenter: parent.verticalCenter
+                icon: Chrono.timerRunning ? "timer_sand" : Chrono.swRunning ? "timer_outline" : "alarm"
+                size: 15
+                color: chronoBtn.counting || chronoBtn.ringing ? Theme.grad1 : Theme.fg
+            }
+            Txt {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: chronoBtn.counting
+                text: Chrono.timerRunning ? Utils.hms(Chrono.timerLeft / 1000) : Utils.hms(Chrono.swElapsed / 1000)
+                font.pixelSize: 11
+                font.family: Theme.mono
+                color: Theme.fg
+            }
+        }
+        HoverHandler {
+            id: chronoHover
+            cursorShape: Qt.PointingHandCursor
+        }
+        TapHandler {
+            onTapped: chronoBtn.ringing ? Chrono.stopRinging() : Chrono.toggle()
+        }
+        Tip {
+            text: chronoBtn.ringing ? "Click to stop" : Chrono.nextAlarm ? "Clock · next alarm in " + Utils.human(Chrono.nextAlarm.inMs / 1000) : "Clock: timer, stopwatch, alarms"
+            show: chronoHover.hovered
+        }
+    }
+
     // ---- clock ----
     Item {
         implicitWidth: clockCol.implicitWidth + 16
@@ -366,8 +416,13 @@ RowLayout {
         TapHandler {
             onTapped: Panels.toggle("sidebar")
         }
+        // right-click: the floating clock
+        TapHandler {
+            acceptedButtons: Qt.RightButton
+            onTapped: Chrono.toggle()
+        }
         Tip {
-            text: Qt.formatDate(sysClock.date, "dddd, d MMMM yyyy")
+            text: Qt.formatDate(sysClock.date, "dddd, d MMMM yyyy") + " · right-click: clock"
             show: clockHover.hovered
         }
         SystemClock {

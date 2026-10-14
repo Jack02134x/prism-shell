@@ -25,6 +25,18 @@ Singleton {
         return h > 0 ? h + ":" + pad2(m) + ":" + pad2(s) : m + ":" + pad2(s);
     }
 
+    // 1:02:03 or 2:03, and with hundredths: 2:03.45
+    function hms(sec) {
+        sec = Math.max(0, Math.ceil(sec));
+        const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, s = sec % 60;
+        return (h > 0 ? h + ":" + pad2(m) : m) + ":" + pad2(s);
+    }
+    function hmsc(ms) {
+        ms = Math.max(0, ms);
+        const t = Math.floor(ms / 1000);
+        const h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, s = t % 60;
+        return (h > 0 ? h + ":" + pad2(m) : pad2(m)) + ":" + pad2(s) + "." + pad2(Math.floor(ms / 10) % 100);
+    }
     // seconds -> "5h 12m" / "12m" / "40s"
     function human(sec) {
         sec = Math.max(0, Math.round(sec));
