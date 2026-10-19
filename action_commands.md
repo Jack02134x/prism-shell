@@ -80,11 +80,3 @@ some other way (for example `wpctl` or `brightnessctl` on the media keys).
 Prism is the notification daemon unless another one (swaync, mako, dunst) is already running.
 Remove that one from your autostart, run `pkill swaync` (or mako / dunst) once, and Prism takes
 over.
-
-## Reading the current state
-
-Prism writes its current state to `~/.config/quickshell/.state/controls.json`, about 0.3 s after
-anything changes. It holds the volume, mute, brightness, what's playing, every toggle, the power
-profile, the theme, recording, focus and the clock. Writes are atomic (a temp file is renamed over
-the old one), so watch the folder rather than the file. Fields are only ever added, and `version`
-goes up if one changes meaning.

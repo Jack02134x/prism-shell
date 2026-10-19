@@ -7,6 +7,7 @@
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs.common
 import qs.services
 import qs.widgets
@@ -65,6 +66,20 @@ ShellRoot {
         PolkitDialog {}
     }
 
+    // your own machine-specific additions (local/, not published), if there are any
+    FileView {
+        id: localEntry
+        path: Quickshell.shellDir + "/local/Local.qml"
+        printErrors: false
+        property bool exists: false
+        onLoaded: exists = true
+        onLoadFailed: exists = false
+    }
+    LazyLoader {
+        active: localEntry.exists
+        source: Quickshell.shellDir + "/local/Local.qml"
+    }
+
     Ipc {}
 
     // start services that nothing on screen touches right away
@@ -78,6 +93,5 @@ ShellRoot {
         Focus.active;
         Idle.active;
         Chrono.loaded;
-        ControlState.state;
     }
 }
