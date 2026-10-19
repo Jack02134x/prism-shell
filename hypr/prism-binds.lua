@@ -61,7 +61,7 @@ bind(mainMod .. " + SHIFT + Space",    hl.dsp.workspace.toggle_special("minimize
 bind(mainMod .. " + L",                hl.dsp.exec_cmd("qs ipc call lock lock"))
 
 ---- MEDIA KEYS ----
-bind("XF86AudioRaiseVolume",  osd("osd volumeUp", "wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
+bind("XF86AudioRaiseVolume",  osd("osd volumeUp", "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
 bind("XF86AudioLowerVolume",  osd("osd volumeDown", "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),      { locked = true, repeating = true })
 bind("XF86AudioMute",         osd("osd mute", "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),          { locked = true })
 bind("XF86AudioMicMute",      osd("osd micMute", "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),     { locked = true })

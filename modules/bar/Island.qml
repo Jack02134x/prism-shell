@@ -41,6 +41,9 @@ Item {
         return "idle";
     }
 
+    // showing something transient (the fullscreen copy of the island only appears then)
+    readonly property bool alerting: mode === "osd" || mode === "notif" || mode === "track"
+
     readonly property real targetW: {
         switch (mode) {
         case "osd":

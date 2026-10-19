@@ -242,6 +242,13 @@ Overlay {
                     fontSize: 17
                     placeholder: win.current.hint
                     horizontalNav: win.gridMode
+                    // 1–5 open the first five results (Alt+1–5 while typing)
+                    digitShortcuts: !win.gridMode
+                    onDigitPicked: n => {
+                        const r = win.results[n - 1];
+                        if (r)
+                            win.run(r, 0);
+                    }
                     onNavigate: (delta, vertical) => {
                         if (win.gridMode) {
                             const cols = Math.max(1, Math.floor(emojiGrid.width / emojiGrid.cellWidth));
@@ -513,6 +520,13 @@ Overlay {
                             onClicked: row.modelData.del()
                         }
 
+                        // its number shortcut (1–5; Alt+n while there's text in the box)
+                        Keycap {
+                            visible: row.index < 5
+                            text: field.text === "" ? String(row.index + 1) : "Alt " + (row.index + 1)
+                            accent: win.accent
+                            opacity: 0.7
+                        }
                         Keycap {
                             visible: row.selected
                             icon: "keyboard_return"
@@ -566,6 +580,9 @@ Overlay {
             Keycap { icon: "keyboard_return"; accent: win.accent }
             Txt { text: "open"; font.pixelSize: 11; color: Theme.fgDim }
             Item { implicitWidth: 6 }
+            Keycap { visible: !win.gridMode; text: "1–5"; accent: win.accent }
+            Txt { visible: !win.gridMode; text: "quick open"; font.pixelSize: 11; color: Theme.fgDim }
+            Item { visible: !win.gridMode; implicitWidth: 6 }
             Keycap { text: "?"; accent: win.accent }
             Txt { text: "prefixes"; font.pixelSize: 11; color: Theme.fgDim }
             Item { Layout.fillWidth: true }

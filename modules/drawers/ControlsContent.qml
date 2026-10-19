@@ -82,6 +82,8 @@ Flickable {
                     Layout.fillWidth: true
                     icon: Audio.icon
                     value: Audio.volume
+                    max: 1.5
+                    softMax: 1
                     accent: Theme.accent(0)
                     accent2: Theme.accent(2)
                     onMoved: v => Audio.setVolume(v)
@@ -91,6 +93,8 @@ Flickable {
                     Layout.fillWidth: true
                     icon: Audio.micIcon
                     value: Audio.micVolume
+                    max: 1.5
+                    softMax: 1
                     accent: Theme.accent(5)
                     accent2: Theme.accent(7)
                     onMoved: v => Audio.setMic(v)

@@ -37,8 +37,12 @@ Singleton {
         sink.audio.muted = false;
         sink.audio.volume = Utils.clamp(v, 0, 1.5);
     }
+    // keys and scrolling stop at 100%; only dragging a slider goes louder. Above
+    // 100% (dragged there) volume-up leaves it alone and volume-down works as usual.
     function nudge(d) {
-        setVolume(Math.round((volume + d) * 100) / 100);
+        if (d > 0 && volume >= 1)
+            return Osd.show("volume", icon, "Volume", volume);
+        setVolume(Math.min(Math.round((volume + d) * 100) / 100, d > 0 ? 1 : 1.5));
     }
     function toggleMute() {
         if (sink?.audio)

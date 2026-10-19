@@ -15,12 +15,15 @@ Rectangle {
 
     // let Left/Right move the selection (grids)
     property bool horizontalNav: false
+    // 1–5 pick the nth result: plain digits while the field is empty, Alt+digit any time
+    property bool digitShortcuts: false
 
     signal accepted
     signal submitted(int modifiers)
     signal escaped
     signal navigate(int delta, bool vertical)
     signal deleteRequested
+    signal digitPicked(int n)
 
     function focusInput() {
         input.forceActiveFocus();
@@ -66,7 +69,9 @@ Rectangle {
         Keys.onPressed: event => {
             const k = event.key;
             const shift = event.modifiers & Qt.ShiftModifier;
-            if (k === Qt.Key_Return || k === Qt.Key_Enter) {
+            if (root.digitShortcuts && k >= Qt.Key_1 && k <= Qt.Key_5 && (input.text === "" || event.modifiers & Qt.AltModifier)) {
+                root.digitPicked(k - Qt.Key_0);
+            } else if (k === Qt.Key_Return || k === Qt.Key_Enter) {
                 root.submitted(event.modifiers);
                 root.accepted();
             } else if (k === Qt.Key_Down || (k === Qt.Key_J && event.modifiers & Qt.ControlModifier)) {

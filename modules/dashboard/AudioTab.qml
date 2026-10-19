@@ -130,6 +130,7 @@ Item {
                         Layout.fillWidth: true
                         icon: Audio.icon
                         value: Audio.volume
+                        softMax: 1
                         max: 1.5
                         accent: Theme.accent(0)
                         accent2: Theme.accent(2)
@@ -168,6 +169,7 @@ Item {
                         Layout.fillWidth: true
                         icon: Audio.micIcon
                         value: Audio.micVolume
+                        softMax: 1
                         max: 1.5
                         accent: Theme.accent(5)
                         accent2: Theme.accent(7)

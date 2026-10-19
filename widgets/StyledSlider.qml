@@ -13,6 +13,8 @@ Item {
     property color accent2: Theme.tertiary
     property bool showValue: true
     property real step: 0.05
+    // the mouse wheel stops here; only dragging goes past it (e.g. volume above 100%)
+    property real softMax: max
     readonly property bool dragging: ma.pressed
     readonly property real frac: Utils.clamp(value / max, 0, 1)
 
@@ -67,6 +69,17 @@ Item {
         }
     }
 
+    // a notch at the soft limit (100% volume)
+    Rectangle {
+        visible: root.softMax < root.max
+        width: 2
+        height: root.height - 16
+        radius: 1
+        anchors.verticalCenter: parent.verticalCenter
+        x: 5 + (root.width - 10) * root.softMax / root.max - 1
+        color: Theme.alpha(Theme.fg, 0.35)
+    }
+
     // handle
     Rectangle {
         id: handle
@@ -109,8 +122,11 @@ Item {
         onPressed: mouse => update(mouse.x)
         onPositionChanged: mouse => { if (pressed) update(mouse.x); }
         onWheel: wheel => {
-            const d = wheel.angleDelta.y > 0 ? root.step : -root.step;
-            root.moved(Utils.clamp(root.value + d, 0, root.max));
+            const up = wheel.angleDelta.y > 0;
+            // scrolling never pushes past the soft limit; above it (dragged there) it only goes down
+            if (up && root.value >= root.softMax)
+                return;
+            root.moved(Utils.clamp(root.value + (up ? root.step : -root.step), 0, up ? root.softMax : root.max));
         }
     }
 }

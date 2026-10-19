@@ -40,6 +40,11 @@ ShellRoot {
         model: Quickshell.screens
         Corners {}
     }
+    // the island over fullscreen apps (only while something is showing)
+    Variants {
+        model: Quickshell.screens
+        FullscreenIsland {}
+    }
 
     // popups (shown on the focused monitor), built only while open (+20 s)
     // notifications pop up in the bar's island (no separate toasts)
@@ -73,5 +78,6 @@ ShellRoot {
         Focus.active;
         Idle.active;
         Chrono.loaded;
+        ControlState.state;
     }
 }

@@ -234,6 +234,14 @@ Scope {
         function brightnessDown(): void {
             Brightness.nudge(-0.05);
         }
+        // absolute levels in percent, e.g. from a slider on the phone (volume stops at 100)
+        function setVolume(percent: int): void {
+            Audio.setVolume(Utils.clamp(percent, 0, 100) / 100);
+        }
+        function setBrightness(percent: int): void {
+            if (Brightness.available)
+                Brightness.set(Utils.clamp(percent, 1, 100) / 100);
+        }
     }
 
     IpcHandler {

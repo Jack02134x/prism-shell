@@ -48,6 +48,7 @@ rather than adding a second bind for the same key, or both commands will run.
 | Mic mute | `qs ipc call osd micMute` |
 | Brightness up | `qs ipc call osd brightnessUp` |
 | Brightness down | `qs ipc call osd brightnessDown` |
+| Set volume / brightness to a level | `qs ipc call osd setVolume 40`, `qs ipc call osd setBrightness 70` (percent) |
 | Play / pause | `qs ipc call media playPause` |
 | Next track | `qs ipc call media next` |
 | Previous track | `qs ipc call media previous` |
@@ -79,3 +80,11 @@ some other way (for example `wpctl` or `brightnessctl` on the media keys).
 Prism is the notification daemon unless another one (swaync, mako, dunst) is already running.
 Remove that one from your autostart, run `pkill swaync` (or mako / dunst) once, and Prism takes
 over.
+
+## Reading the current state
+
+Prism writes its current state to `~/.config/quickshell/.state/controls.json`, about 0.3 s after
+anything changes. It holds the volume, mute, brightness, what's playing, every toggle, the power
+profile, the theme, recording, focus and the clock. Writes are atomic (a temp file is renamed over
+the old one), so watch the folder rather than the file. Fields are only ever added, and `version`
+goes up if one changes meaning.
