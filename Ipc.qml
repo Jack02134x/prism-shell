@@ -255,6 +255,15 @@ Scope {
         function previous(): void {
             Media.previous();
         }
+        // read-only: what's playing and whether the visualizer feed (cava) runs
+        function status(): string {
+            return JSON.stringify({
+                player: Media.identity,
+                playing: Media.playing,
+                players: Media.players.map(p => p.identity + (p.isPlaying ? " (playing)" : "")),
+                cava: { active: Cava.active, consumers: Cava.consumers, hifi: Cava.hifiConsumers, frame: Cava.frame, bass: Math.round(Cava.bass * 1000) / 1000, level: Math.round(Cava.level * 1000) / 1000 }
+            });
+        }
     }
 
     IpcHandler {
@@ -292,6 +301,15 @@ Scope {
         }
         function preview(): void {
             Session.preview = !Session.preview;
+        }
+        // what the shell thinks about locking and idling (read-only, for debugging)
+        function status(): string {
+            return JSON.stringify({
+                locked: Session.locked,
+                prismLock: Config.lock.enabled,
+                idle: { active: Idle.active, counting: Idle.counting, busy: Idle.busy, hypridle: Idle.hypridleRunning, dimmed: Idle.dimmed, screensOff: Idle.screensOff },
+                times: { dim: Config.idle.dimAfter, lock: Config.idle.lockAfter, off: Config.idle.screenOffAfter }
+            });
         }
     }
 

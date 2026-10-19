@@ -28,25 +28,43 @@ Singleton {
     property real savedBrightness: 1
 
     // ---- stages ----
-    IdleMonitor {
-        enabled: root.counting && Config.idle.dimAfter > 0 && Brightness.available
-        timeout: Math.max(1, Config.idle.dimAfter)
-        onIsIdleChanged: isIdle ? root.dim() : root.undim()
+    // Quickshell's IdleMonitor reads `timeout` only when it registers, so each stage
+    // is (re)created through Variants whenever its time changes or counting
+    // pauses/resumes: the model is [seconds] while active, [] while off.
+    function stage(seconds, on) {
+        return root.counting && on && seconds > 0 ? [seconds] : [];
     }
-    IdleMonitor {
-        enabled: root.counting && Config.idle.lockAfter > 0
-        timeout: Math.max(1, Config.idle.lockAfter)
-        onIsIdleChanged: if (isIdle) Session.lock()
+    Variants {
+        model: root.stage(Config.idle.dimAfter, Brightness.available)
+        IdleMonitor {
+            required property var modelData
+            timeout: modelData
+            onIsIdleChanged: isIdle ? root.dim() : root.undim()
+        }
     }
-    IdleMonitor {
-        enabled: root.counting && Config.idle.screenOffAfter > 0
-        timeout: Math.max(1, Config.idle.screenOffAfter)
-        onIsIdleChanged: root.screens(!isIdle)
+    Variants {
+        model: root.stage(Config.idle.lockAfter, true)
+        IdleMonitor {
+            required property var modelData
+            timeout: modelData
+            onIsIdleChanged: if (isIdle) Session.lock()
+        }
     }
-    IdleMonitor {
-        enabled: root.counting && Config.idle.suspendAfter > 0
-        timeout: Math.max(1, Config.idle.suspendAfter)
-        onIsIdleChanged: if (isIdle) Session.suspend()
+    Variants {
+        model: root.stage(Config.idle.screenOffAfter, true)
+        IdleMonitor {
+            required property var modelData
+            timeout: modelData
+            onIsIdleChanged: root.screens(!isIdle)
+        }
+    }
+    Variants {
+        model: root.stage(Config.idle.suspendAfter, true)
+        IdleMonitor {
+            required property var modelData
+            timeout: modelData
+            onIsIdleChanged: if (isIdle) Session.suspend()
+        }
     }
 
     // media started, caffeine on, or the manager was switched off: undo everything
@@ -138,7 +156,8 @@ Singleton {
     Process {
         id: logind
         running: root.active
-        command: ["gdbus", "monitor", "--system", "--dest", "org.freedesktop.login1"]
+        // exits with the shell: a restarted shell used to leave these behind
+        command: ["sh", "-c", "qs=$PPID; gdbus monitor --system --dest org.freedesktop.login1 & g=$!; trap 'kill $g 2>/dev/null' EXIT TERM INT; while kill -0 $qs 2>/dev/null && kill -0 $g 2>/dev/null; do sleep 10 & wait $!; done"]
         stdout: SplitParser {
             onRead: line => root.onLogind(line)
         }
@@ -154,7 +173,8 @@ Singleton {
     property bool holdSleep: true
     Process {
         running: root.active && Config.idle.lockBeforeSleep && root.holdSleep
-        command: ["systemd-inhibit", "--what=sleep", "--mode=delay", "--who=Prism", "--why=Lock the screen before sleeping", "sleep", "infinity"]
+        // held until released, or until the shell itself goes away
+        command: ["sh", "-c", "qs=$PPID; exec systemd-inhibit --what=sleep --mode=delay --who=Prism '--why=Lock the screen before sleeping' sh -c \"while kill -0 $qs 2>/dev/null; do sleep 10; done\""]
     }
     Timer {
         id: releaseSleep

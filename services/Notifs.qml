@@ -77,7 +77,32 @@ Singleton {
         Entry {}
     }
 
+    // which notifications already popped up; survives shell reloads (the server
+    // keeps notifications across reloads, and they must not pop up a second time)
+    // stored as a string: object values don't reliably survive a reload
+    PersistentProperties {
+        id: memory
+        reloadableId: "prism-notifications"
+        property string popped: ""
+    }
+    function poppedIds() {
+        return (memory.popped || "").split(",").filter(x => x !== "");
+    }
+
     function add(entry) {
+        const n = entry.notif;
+        if (n) {
+            // the same notification handed over twice after a reload: keep one
+            if (list.some(e => e.notif === n)) {
+                entry.destroy();
+                return;
+            }
+            const ids = poppedIds();
+            if (ids.includes(String(n.id)))
+                entry.popup = false;
+            else if (entry.popup)
+                memory.popped = ids.concat([String(n.id)]).slice(-200).join(",");
+        }
         const l = list.slice();
         l.unshift(entry);
         while (l.length > 60) {
