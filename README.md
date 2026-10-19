@@ -93,7 +93,7 @@ The [tour](assets/prism-demo.mp4) shows the rest: the bongo cat, overview, drawe
 Log in on the console and run:
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/CHANGE_ME/prism/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/jack02134x/prism/main/install.sh)
 ```
 
 Or clone it first:
