@@ -52,6 +52,11 @@ def run(first_command=""):
             win.show_window()
         elif op == "hide":
             win.hide_window()
+        elif op == "mini":
+            # mini on | off | toggle
+            want = {"on": True, "off": False}.get(rest[0] if rest else "toggle", not clock.mini)
+            if want != clock.mini:
+                win.toggle_mini()
         elif op == "timer" and rest:
             try:
                 minutes = float(rest[0])

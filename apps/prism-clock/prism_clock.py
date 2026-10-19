@@ -4,6 +4,7 @@
     prism_clock.py toggle            show / hide the window (starts the app if needed)
     prism_clock.py show [tab]        clock | timer | stopwatch | alarms | settings
     prism_clock.py hide
+    prism_clock.py mini [on|off]     shrink to / expand from the mini pill
     prism_clock.py timer <minutes>   start a timer (0 or `cancel` stops it)
     prism_clock.py stopwatch         start / pause the stopwatch
     prism_clock.py stop | snooze     whatever is ringing

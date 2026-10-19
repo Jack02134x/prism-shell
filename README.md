@@ -2,6 +2,12 @@
 
 **A Quickshell desktop shell for Hyprland.** The colours come from your wallpaper and everything moves.
 
+<p align="center">
+  <a href="assets/prism-demo.mp4"><img src="assets/bongo-cat.gif" alt="Prism's Now Playing tab: a bongo cat drumming to the music above a live visualizer" width="720"></a>
+  <br>
+  <a href="assets/prism-demo.mp4"><b>▶ Watch the 48-second tour (with sound)</b></a>
+</p>
+
 ![Prism desktop](assets/desktop.jpg)
 
 Prism replaces your bar, launcher, notification daemon, OSDs, lock screen and power menu with one
@@ -18,18 +24,12 @@ palette cross-fades instead of snapping.
 
 | | |
 | :---: | :---: |
-| ![Dashboard home](assets/dashboard-home.jpg) | ![Now playing](assets/dashboard-media.jpg) |
-| **Dashboard**: toggles, media, weather, screen time, phone | **Now playing**: vinyl disc and a live visualizer |
-| ![System monitor](assets/dashboard-system.jpg) | ![Launcher](assets/launcher.jpg) |
-| **System**: CPU, memory, temperatures, network, processes | **Launcher**: apps, commands, clipboard, emoji, maths |
-| ![Workspace overview](assets/overview.jpg) | ![Wallpaper picker](assets/wallpapers.jpg) |
-| **Overview**: live previews, drag windows between workspaces | **Wallpapers**: coverflow picker that recolours everything |
-| ![Control drawer](assets/controls.jpg) | ![Notification centre](assets/sidebar.jpg) |
-| **Left drawer**: sliders, quick toggles, media | **Right drawer**: calendar and notifications |
-| ![Power menu](assets/power.jpg) | ![Lock screen](assets/lock.jpg) |
-| **Power menu** | **Lock screen** |
-| ![Keybind cheatsheet](assets/cheatsheet.jpg) | ![Screenshot menu](assets/screenshot-menu.jpg) |
-| **Cheatsheet**, generated from your Hyprland binds | **Capture**: region / window / screen, recording, colour picker |
+| ![Dashboard home](assets/dashboard-home.jpg) | ![Launcher](assets/launcher.jpg) |
+| **Dashboard**: toggles, media, weather, screen time, phone | **Launcher**: apps, commands, clipboard, emoji, maths |
+| ![Wallpaper picker](assets/wallpapers.jpg) | ![Lock screen](assets/lock.jpg) |
+| **Wallpapers**: coverflow picker that recolours everything | **Lock screen** |
+
+The [tour](assets/prism-demo.mp4) shows the rest: the bongo cat, overview, drawers, clock and power menu.
 
 ## Features
 

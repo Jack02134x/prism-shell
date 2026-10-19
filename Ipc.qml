@@ -302,6 +302,16 @@ Scope {
         function preview(): void {
             Session.preview = !Session.preview;
         }
+        // the preview without its hint labels (for demos); call again (or Esc) to close
+        function demo(): void {
+            if (Session.preview) {
+                Session.preview = false;
+                Session.previewClean = false;
+            } else {
+                Session.previewClean = true;
+                Session.preview = true;
+            }
+        }
         // what the shell thinks about locking and idling (read-only, for debugging)
         function status(): string {
             return JSON.stringify({

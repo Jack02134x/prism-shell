@@ -11,6 +11,9 @@ Singleton {
     property bool locked: false
     // render the lock UI in a normal overlay without locking (for previewing)
     property bool preview: false
+    // preview without the "preview" hints, exactly as the real lock looks (demos, screenshots)
+    property bool previewClean: false
+    onPreviewChanged: if (!preview) previewClean = false
 
     function lock() {
         if (Config.lock.enabled)

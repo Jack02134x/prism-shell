@@ -186,7 +186,7 @@ Item {
                 anchors.fill: parent
                 password: true
                 icon: root.busy ? "loading" : "lock"
-                placeholder: root.preview ? "Preview — Esc to close" : "Password"
+                placeholder: root.preview && !Session.previewClean ? "Preview — Esc to close" : "Password"
                 accent: root.error !== "" ? Theme.error : Theme.accent(0)
                 radius: 26
                 color: Qt.rgba(0, 0, 0, 0.45)
@@ -275,7 +275,7 @@ Item {
     }
 
     Txt {
-        visible: root.preview
+        visible: root.preview && !Session.previewClean
         anchors.top: parent.top
         anchors.right: parent.right
         anchors.margins: 24
