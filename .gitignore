@@ -5,6 +5,9 @@ config.json
 
 # personal notes
 changes_to_make.txt
+
+# machine-specific additions (e.g. the phone control panel's state export)
+local/
 *.bak-*
 
 # python
