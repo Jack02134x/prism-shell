@@ -56,7 +56,7 @@ The [tour](assets/prism-demo.mp4) shows the rest: the bongo cat, overview, drawe
   - `y ` YouTube
   - `w ` wallpapers
   - `?` help
-- **Dashboard** with tabs: Home, Media (big visualizer), System (CPU / GPU / memory / disks / processes),
+- **Dashboard** with tabs: Home, Media (a bongo cat drumming to the beat over a live visualizer), System (CPU / GPU / memory / disks / processes),
   Screen time, Network (Wi-Fi + Bluetooth), Audio (per-app mixer, mic meter) and Settings.
 - **Workspace overview** with live window previews:
   - drag windows between workspaces
