@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Prism — one-shot installer: bare Arch  ->  Hyprland + the Prism Quickshell desktop.
 #
-#   bash <(curl -fsSL https://raw.githubusercontent.com/CHANGE_ME/prism/main/install.sh)
+#   bash <(curl -fsSL https://raw.githubusercontent.com/Jack02134x/prism-shell/main/install.sh)
 #   # or
-#   git clone https://github.com/CHANGE_ME/prism ~/.config/quickshell && ~/.config/quickshell/install.sh
+#   git clone https://github.com/Jack02134x/prism-shell ~/.config/quickshell && ~/.config/quickshell/install.sh
 #
 # Made for a fresh Arch install with no desktop yet, but safe on an existing setup
 # (anything it changes is backed up, and every edit to your files sits between
@@ -27,7 +27,7 @@
 
 set -uo pipefail
 
-PRISM_REPO="${PRISM_REPO:-https://github.com/CHANGE_ME/prism.git}"
+PRISM_REPO="${PRISM_REPO:-https://github.com/Jack02134x/prism-shell.git}"
 CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 DEST="$CONFIG_HOME/quickshell"
 HYPR_DIR="$CONFIG_HOME/hypr"
@@ -515,7 +515,6 @@ SRC=""
 [[ -n $SELF && -f $(dirname "$SELF")/shell.qml ]] && SRC=$(dirname "$SELF")
 
 if [[ -z $SRC ]]; then
-    [[ $PRISM_REPO == *CHANGE_ME* ]] && die "PRISM_REPO isn't set — clone the repo and run ./install.sh from it."
     have git || die "git is needed to download Prism (sudo pacman -S git)"
     TMP=$(mktemp -d)
     info "downloading $PRISM_REPO"

@@ -93,13 +93,13 @@ The [tour](assets/prism-demo.mp4) shows the rest: the bongo cat, overview, drawe
 Log in on the console and run:
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/jack02134x/prism/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/Jack02134x/prism-shell/main/install.sh)
 ```
 
 Or clone it first:
 
 ```sh
-git clone https://github.com/CHANGE_ME/prism ~/.config/quickshell
+git clone https://github.com/Jack02134x/prism-shell ~/.config/quickshell
 ~/.config/quickshell/install.sh
 ```
 
