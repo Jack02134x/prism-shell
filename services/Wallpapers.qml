@@ -71,7 +71,7 @@ Singleton {
     function applyVideo(path) {
         if (/\.gif$/i.test(path))
             return Utils.sh("pkill -x mpvpaper; awww img \"$1\" --transition-type random; f=\"$2/live-frame.png\"; magick \"$1[0]\" \"$f\" && matugen image \"$f\" -m \"$4\" " + schemeArg + "--source-color-index \"$3\"", path, Config.cacheDir, Config.wallpaper.matugenIndex, Config.wallpaper.mode);
-        Utils.sh("pkill -x mpvpaper; (setsid -f mpvpaper -o 'no-audio --loop-playlist' ALL \"$1\" >/dev/null 2>&1); f=\"$2/live-frame.png\"; ffmpegthumbnailer -i \"$1\" -o \"$f\" -s 0 -t 15% && matugen image \"$f\" -m \"$4\" " + schemeArg + "--source-color-index \"$3\"", path, Config.cacheDir, Config.wallpaper.matugenIndex, Config.wallpaper.mode);
+        Utils.sh("pkill -x mpvpaper; (setsid -f \"$5\" \"$1\" \"$6\" >/dev/null 2>&1); f=\"$2/live-frame.png\"; ffmpegthumbnailer -i \"$1\" -o \"$f\" -s 0 -t 15% && matugen image \"$f\" -m \"$4\" " + schemeArg + "--source-color-index \"$3\"", path, Config.cacheDir, Config.wallpaper.matugenIndex, Config.wallpaper.mode, Config.shellDir + "/scripts/live-wallpaper.py", Config.wallpaper.liveGpu);
         Notifs.local("Live wallpaper", Utils.stem(path), "filmstrip");
     }
 

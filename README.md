@@ -196,6 +196,9 @@ and both apply live. Useful keys:
   chips (default `["minimize", "magic"]`).
 - `wallpaper.dir`, `wallpaper.mode` (`dark` / `light`), `wallpaper.scheme`: where wallpapers live and
   how matugen builds the palette.
+- `wallpaper.liveGpu`: which GPU plays live (video) wallpapers. `"auto"` uses the discrete GPU on
+  hybrid laptops (NVIDIA through PRIME offload, AMD through `DRI_PRIME`); `"integrated"` always uses
+  the main one.
 - `lock.enabled`: use Prism's lock screen (PAM via `/etc/pam.d/hyprlock`). Otherwise `hyprlock` runs.
 - `paths.extraBinds`: a second bind file for the cheatsheet (the installer points it at `hypr/prism-binds.lua`).
 - `notifications.server`: set to `false` if you'd rather keep swaync, mako or dunst.

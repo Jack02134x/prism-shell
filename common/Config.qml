@@ -112,6 +112,9 @@ Singleton {
                 property string mode: "dark"
                 // matugen scheme: "" (default tonal-spot) | scheme-vibrant | scheme-expressive | scheme-fidelity | scheme-content
                 property string scheme: ""
+                // which GPU plays live (video) wallpapers: "auto" = the discrete one when
+                // there is one (hybrid laptops), "integrated" = always the main GPU
+                property string liveGpu: "auto"
                 // optional: write the wallpaper's name to this file ("" = off)
                 property string nameFile: ""
                 // a copy of the current wallpaper (handy for hyprlock etc.)
