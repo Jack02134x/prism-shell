@@ -48,7 +48,7 @@ LUA_B="-- >>> prism >>>" LUA_E="-- <<< prism <<<"
 SH_B="# >>> prism >>>" SH_E="# <<< prism <<<"
 CSS_B="/* >>> prism >>> */" CSS_E="/* <<< prism <<< */"
 
-YES=0 DRY=0 DO_PACKAGES=1 DO_HYPR=1 DO_BINDS=1 DO_START=1 DO_LOGIN=1 DO_APPS=1 DO_ST=1 UNINSTALL=0
+YES=0 DRY=0 DO_PACKAGES=1 DO_HYPR=1 DO_BINDS=1 DO_START=1 DO_LOGIN=1 DO_APPS=1 DO_ST=1 UNINSTALL=0 REFRESH=0
 
 # ---------------------------------------------------------------- output ----
 if [[ -t 1 ]]; then
@@ -199,6 +199,8 @@ Usage: install.sh [options]
       --no-login     don't start Hyprland automatically on tty1
       --no-screentime  skip the screen-time tracker
       --no-start     don't start anything at the end
+      --refresh      re-apply Prism to what's already set up, without the setup
+                     questions (upgrade.sh runs this after updating the files)
       --uninstall    take Prism back out (packages stay)
   -h, --help         this help
 
@@ -218,6 +220,7 @@ while (($#)); do
     --no-screentime) DO_ST=0 ;;
     --no-start) DO_START=0 ;;
     --uninstall) UNINSTALL=1 ;;
+    --refresh) REFRESH=1 ;;
     -h | --help) usage; exit 0 ;;
     *) usage; die "unknown option: $1" ;;
     esac
@@ -296,9 +299,23 @@ uninstall() {
 
 ((UNINSTALL)) && uninstall
 
+# lines between Prism's markers in file $1 ($2/$3: the markers, default # style)
+block_body() { [[ -f $1 ]] && awk -v b="${2:-$SH_B}" -v e="${3:-$SH_E}" '$0 == b { s = 1; next } s && $0 == e { s = 0 } s' "$1"; }
+
+# --refresh: redo only what this machine already has, judged by Prism's blocks
+# in the user's files, so nothing they said no to comes back
+if ((REFRESH)); then
+    DO_LOGIN=0
+    if has_block "$HYPR_LUA" "$LUA_B"; then
+        block_body "$HYPR_LUA" "$LUA_B" "$LUA_E" | grep -q "prism-binds.lua" || DO_BINDS=0
+    else
+        DO_HYPR=0
+    fi
+fi
+
 # ============================================================= preflight ===
-banner
-log "---- install $STAMP (yes=$YES dry=$DRY) ----"
+((REFRESH)) || banner
+log "---- install $STAMP (yes=$YES dry=$DRY refresh=$REFRESH) ----"
 step "Checking your system"
 
 ((EUID == 0)) && die "Run this as your normal user, not root. It asks for your password (sudo) when it needs it."
@@ -399,26 +416,31 @@ install_yay() {
 }
 
 WANT_ST=0 ST_ASKED=0
+# refresh: the tracker stays if it was set up, and isn't offered again if not
+((REFRESH)) && { [[ -d $SCREENTIME_DIR ]] && ((DO_ST)) && WANT_ST=1; ST_ASKED=1; }
+
+# keep sudo alive for the whole run
+keep_sudo() {
+    ((DRY)) || [[ -n $SUDO_KEEP ]] && return 0
+    sudo -v <"$TTY" || die "sudo is needed to install packages."
+    (while kill -0 $$ 2>/dev/null; do sudo -n -v 2>/dev/null; sleep 50; done) &
+    SUDO_KEEP=$!
+}
+
 if ((DO_PACKAGES)); then
     step "Packages"
-    # keep sudo alive for the whole run
-    if ((!DRY)); then
-        sudo -v <"$TTY" || die "sudo is needed to install packages."
-        (while kill -0 $$ 2>/dev/null; do sudo -n -v 2>/dev/null; sleep 50; done) &
-        SUDO_KEEP=$!
-    fi
+    ((REFRESH)) || keep_sudo
 
-    if ((DO_ST)); then
+    if ((DO_ST && !ST_ASKED)); then
         info "The dashboard's Screen time tab is fed by a small tracker (hyprland-screen_time)."
-        if ask "Track screen time? (python + PySide6, runs as a user service)" Y; then
-            WANT_ST=1
-            SHELL_PKGS+=(libpulse) # pactl, for counting audio; python + pyside6 are already in
-        fi
+        ask "Track screen time? (python + PySide6, runs as a user service)" Y && WANT_ST=1
         ST_ASKED=1
     fi
+    ((WANT_ST)) && SHELL_PKGS+=(libpulse) # pactl, for counting audio; python + pyside6 are already in
     mapfile -t NEED < <(missing "${DESKTOP[@]}" "${SHELL_PKGS[@]}" "${LOOKS[@]}")
     if ((${#NEED[@]})); then
-        info "${B}${#NEED[@]} packages${R} to install: ${D}${NEED[*]}${R}"
+        ((REFRESH)) && keep_sudo
+        info "${B}${#NEED[@]} packages${R} $( ((REFRESH)) && echo "Prism now needs" || echo "to install"): ${D}${NEED[*]}${R}"
         if ask "Update the system and install them?" Y; then
             flags=(-Syu --needed)
             ((YES)) && flags+=(--noconfirm)
@@ -430,7 +452,10 @@ if ((DO_PACKAGES)); then
     else
         ok "everything Prism needs is already installed"
     fi
+fi
 
+# the optional extras and services were offered on the first run
+if ((DO_PACKAGES && !REFRESH)); then
     pick_aur
     if [[ -n $AUR ]]; then
         ok "AUR helper: $AUR"
@@ -552,7 +577,7 @@ else
     ok "copied Prism"
 fi
 run mkdir -p "$DEST/.state" "$DEST/.cache"
-run chmod +x "$DEST/install.sh" "$DEST/scripts/thumbs.sh" "$DEST/apps/prism-clock/prism_clock.py" 2>/dev/null
+run chmod +x "$DEST/install.sh" "$DEST/upgrade.sh" "$DEST/scripts/thumbs.sh" "$DEST/apps/prism-clock/prism_clock.py" 2>/dev/null
 
 # ================================================================ config ===
 step "Personalising"
@@ -579,9 +604,6 @@ KB=$(localectl status 2>/dev/null | awk -F': *' '/X11 Layout/ {print $2; exit}')
 [[ -z $KB ]] && KB=$(localectl status 2>/dev/null | awk -F': *' '/VC Keymap/ {print $2; exit}' | cut -d- -f1)
 [[ -z $KB || $KB == "(unset)" || $KB == n/a ]] && KB=us
 
-LOCK=true
-ask "Use Prism's own lock screen? (no = hyprlock)" Y || LOCK=false
-
 # screen time (asked during the package step when packages are installed)
 if ((DO_ST && !ST_ASKED)); then
     ask "Set up the screen-time tracker for the dashboard's Screen time tab?" Y && WANT_ST=1
@@ -593,6 +615,8 @@ EXTRA_BINDS=""
 if [[ -f $DEST/config.json ]]; then
     ok "keeping your config.json"
 else
+    LOCK=true
+    ask "Use Prism's own lock screen? (no = hyprlock)" Y || LOCK=false
     write_file "$DEST/config.json" <<EOF
 {
     "user": {
@@ -658,7 +682,9 @@ if ((DO_HYPR)); then
     [[ -f $HYPR_DIR/hyprland.conf && $state == none ]] && warn "found an old hyprland.conf — Hyprland uses hyprland.lua instead once it exists"
 
     install_starter=0
+    ((REFRESH)) && [[ $state != starter ]] && state=kept
     case $state in
+    kept) ;;
     none | default)
         info "Your Hyprland config is $([[ $state == none ]] && echo "missing" || echo "Hyprland's untouched default")."
         ask "Install Prism's full Hyprland config (layout, animations, window rules, keybinds)?" Y && install_starter=1
@@ -695,7 +721,7 @@ if ((DO_HYPR)); then
     fi
 
     # idle (dim -> lock -> screens off) is built into Prism; hypridle would do it twice
-    ok "idle: dim at 3 min · lock at 4 · screens off at 5 (Dashboard → Settings to change)"
+    ((REFRESH)) || ok "idle: dim at 3 min · lock at 4 · screens off at 5 (Dashboard → Settings to change)"
 
     # things that fight Prism for the same job
     declare -A ROLE=([waybar]="bar" [swaync]="notifications" [mako]="notifications" [dunst]="notifications"
@@ -729,7 +755,15 @@ own_output() { outside_block "$MATUGEN_CONF" "$1"; }
 THEME_KITTY=0 THEME_GTK=0
 if ((DO_APPS)); then
     step "Apps"
-    if ask "Colour kitty and GTK apps from your wallpaper too?" Y; then
+    if ((REFRESH)); then
+        # keep whichever app colours were chosen the first time
+        { block_body "$MATUGEN_CONF" | grep -q "templates.prism-kitty" ||
+            block_body "$KITTY_CONF" | grep -q "prism-colors.conf"; } && ! own_output "kitty/" && THEME_KITTY=1
+        for g in gtk-3.0 gtk-4.0; do
+            has_block "$CONFIG_HOME/$g/gtk.css" "$CSS_B" && THEME_GTK=1
+        done
+        ((THEME_KITTY + THEME_GTK)) && ok "keeping the wallpaper colours for$( ((THEME_KITTY)) && echo " kitty")$( ((THEME_KITTY && THEME_GTK)) && echo " and")$( ((THEME_GTK)) && echo " GTK apps")"
+    elif ask "Colour kitty and GTK apps from your wallpaper too?" Y; then
         # kitty
         if own_output "kitty/"; then
             ok "kitty: your matugen config already colours it — left alone"
@@ -772,7 +806,8 @@ EOF
     # Prism's block in an existing kitty.conf: the wallpaper colours (if wanted),
     # and no remembered window size. kitty also remembers "maximized", so once a
     # maximized window is closed every new one opens maximized over the tiles.
-    if [[ -f $KITTY_CONF ]]; then
+    # (refresh: only a kitty.conf Prism set up before, so --no-apps stays honoured)
+    if [[ -f $KITTY_CONF ]] && { ((!REFRESH || THEME_KITTY)) || has_block "$KITTY_CONF" "$SH_B"; }; then
         lines=()
         ((THEME_KITTY)) && ! outside_block "$KITTY_CONF" "prism-colors.conf" &&
             lines+=("include prism-colors.conf")
@@ -896,12 +931,13 @@ step "Colours (matugen)"
 ok "every wallpaper change now recolours Prism$( ((STARTER)) && echo ", window borders")$( ((THEME_KITTY)) && echo ", kitty")$( ((THEME_GTK)) && echo " and GTK apps")"
 
 # ============================================================ wallpapers ===
-step "Wallpapers"
+((REFRESH)) || step "Wallpapers"
 run mkdir -p "$WALL_DIR" "$PICTURES/Screenshots" "$VIDEOS/Recordings" "$VIDEOS/Wallpapers"
 shopt -s nullglob nocaseglob
 bundled=("$DEST"/wallpapers/*.jpg)
 ((DRY)) && bundled=("$SRC"/wallpapers/*.jpg)
-if ((${#bundled[@]})); then
+# (not on refresh: bundled wallpapers someone deleted stay deleted)
+if ((${#bundled[@]} && !REFRESH)); then
     run cp -n -- "${bundled[@]}" "$WALL_DIR/"
     ok "${#bundled[@]} wallpapers in $(tilde "$WALL_DIR") — drop your own in there too (SUPER+W to pick)"
 fi
@@ -963,17 +999,27 @@ fi
 # ================================================================= start ===
 if ((DO_START && IN_HYPR)); then
     step "Starting Prism"
-    if ask "Reload Hyprland and start Prism now?" Y; then
+    if ask "Reload Hyprland and $( ((REFRESH)) && echo "restart" || echo "start") Prism now?" Y; then
         ((DO_HYPR)) && run hyprctl reload >/dev/null
         pgrep -f 'wl-paste --type text --watch' >/dev/null || run setsid -f wl-paste --type text --watch cliphist store
         pgrep -f 'wl-paste --type image --watch' >/dev/null || run setsid -f wl-paste --type image --watch cliphist store
         pidof quickshell >/dev/null && run pkill -x quickshell && { ((DRY)) || sleep 0.5; }
         run setsid -f quickshell >/dev/null 2>&1
+        # the clock app keeps running its old code otherwise (it comes back hidden; alarms are kept)
+        clock=$DEST/apps/prism-clock/prism_clock.py
+        if [[ -f $clock ]] && pgrep -f "prism_clock.py --run" >/dev/null; then
+            run python3 "$clock" quit && { ((DRY)) || sleep 0.5; } && run python3 "$clock" daemon
+        fi
         ok "Prism is running"
     fi
 fi
 
 # ================================================================== done ===
+if ((REFRESH)); then
+    step "Up to date"
+    info "Log: $(tilde "$LOG")"
+    exit 0
+fi
 step "All done"
 cat <<EOF
 
@@ -992,7 +1038,7 @@ cat <<EOF
     Hyprland      $(tilde "$HYPR_LUA")
     Prism keys    $(tilde "$DEST")/hypr/prism-binds.lua
     commands      $(tilde "$DEST")/action_commands.md
-    update        cd $(tilde "$DEST") && git pull && ./install.sh
+    update        $(tilde "$DEST")/upgrade.sh
     undo          $(tilde "$DEST")/install.sh --uninstall
     log           $(tilde "$LOG")
 

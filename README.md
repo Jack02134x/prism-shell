@@ -140,6 +140,7 @@ Options:
 | `--no-apps` | Don't theme kitty or GTK. |
 | `--no-login` | Don't start Hyprland on tty1. |
 | `--no-start` | Don't start anything at the end. |
+| `--refresh` | Re-apply Prism to what's already set up, without the setup questions (`upgrade.sh` runs this). |
 | `--uninstall` | Take it all back out (packages stay installed). |
 
 The log is written to `~/.cache/prism-install.log`. Hyprland won't start? Log in on tty2
@@ -231,9 +232,29 @@ Prism dispatches through Hyprland's Lua API (`hl.dsp.*`), so it needs Hyprland 0
 ## Updating and removing
 
 ```sh
-cd ~/.config/quickshell && git pull && ./install.sh   # update; keeps config.json, palette and your edits
-~/.config/quickshell/install.sh --uninstall            # take Prism back out
+~/.config/quickshell/upgrade.sh                # update to the latest version
+~/.config/quickshell/install.sh --uninstall    # take Prism back out
 ```
+
+`upgrade.sh` shows what's new and then updates Prism's files. Files that were removed upstream
+are removed too. After that it re-applies Prism to what you already set up: it installs any new
+packages Prism needs, refreshes its blocks in your Hyprland, matugen and kitty configs, and
+restarts the shell. It doesn't ask the setup questions again, and nothing you said no to comes
+back. `config.json`, `.state/` (palette, history) and `local/` are never touched.
+
+If you've edited Prism's own files, they're backed up to `.state/upgrade-backup-<date>/` and kept
+on top of the new version. Where an edit clashes with an upstream change, the new version is used,
+and your copy stays in the backup.
+
+| Option | Effect |
+| --- | --- |
+| `--dry-run` | Show what's new and what would happen, change nothing. |
+| `--yes` | Accept every default without asking. |
+| `--check` | Only say whether an update is available. |
+| `--force` | Re-apply Prism even when it's already up to date. |
+
+An install too old to have `upgrade.sh` can run it straight from GitHub:
+`bash <(curl -fsSL https://raw.githubusercontent.com/Jack02134x/prism-shell/main/upgrade.sh)`
 
 ## Troubleshooting
 
