@@ -61,6 +61,21 @@ Shape {
 
     preferredRendererType: Shape.CurveRenderer
 
+    // a thin dark edge, so the thread reads on light wallpapers too
+    ShapePath {
+        strokeColor: Qt.rgba(0, 0, 0, 0.35)
+        strokeWidth: root.thickness + 2
+        fillColor: "transparent"
+        capStyle: ShapePath.RoundCap
+        startX: root.from.x
+        startY: root.from.y
+        PathQuad {
+            x: root.to.x
+            y: root.to.y
+            controlX: 2 * root.px - (root.from.x + root.to.x) / 2
+            controlY: 2 * root.py - (root.from.y + root.to.y) / 2
+        }
+    }
     // soft glow under the line
     ShapePath {
         strokeColor: Theme.alpha(root.color, 0.22)

@@ -3,20 +3,14 @@
 **A Quickshell desktop shell for Hyprland.** The colours come from your wallpaper and everything moves.
 
 <p align="center">
-  <a href="assets/prism-demo.mp4"><img src="assets/bongo-cat.gif" alt="Prism's Now Playing tab: a bongo cat drumming to the music above a live visualizer" width="720"></a>
+  <a href="assets/prism-demo.mp4"><img src="assets/desktop.jpg" alt="The Prism desktop: bar, island and wallpaper-coloured theme" width="720"></a>
   <br>
   <a href="assets/prism-demo.mp4"><b>▶ Watch the 48-second tour (with sound)</b></a>
 </p>
 
-![Prism desktop](assets/desktop.jpg)
-
 Prism replaces your bar, launcher, notification daemon, OSDs, lock screen and power menu with one
 shell. Pick a wallpaper and [matugen](https://github.com/InioX/matugen) recolours all of it. The
 palette cross-fades instead of snapping.
-
-<p align="center">
-  <img src="assets/island-player.png" alt="The island expanded into a music player" width="560">
-</p>
 
 ![The bar](assets/bar.png)
 
@@ -24,12 +18,14 @@ palette cross-fades instead of snapping.
 
 | | |
 | :---: | :---: |
-| ![Dashboard home](assets/dashboard-home.jpg) | ![Launcher](assets/launcher.jpg) |
-| **Dashboard**: toggles, media, weather, screen time, phone | **Launcher**: apps, commands, clipboard, emoji, maths |
-| ![Wallpaper picker](assets/wallpapers.jpg) | ![Lock screen](assets/lock.jpg) |
-| **Wallpapers**: coverflow picker that recolours everything | **Lock screen** |
+| ![Dashboard home](assets/dashboard-home.jpg) | ![Media tab](assets/media.jpg) |
+| **Dashboard**: toggles, media, weather, screen time, phone | **Media**: a spinning vinyl over a live visualizer |
+| ![Launcher](assets/launcher.jpg) | ![Wallpaper picker](assets/wallpapers.jpg) |
+| **Launcher**: apps, commands, clipboard, emoji, maths | **Wallpapers**: coverflow picker that recolours everything |
+| ![Lock screen](assets/lock.jpg) | ![Screenshot tool](assets/screenshot-tool.jpg) |
+| **Lock screen**: the day at a glance, music card and visualizer | **Screenshots**: threads from the screen corners to your selection |
 
-The [tour](assets/prism-demo.mp4) shows the rest: the bongo cat, overview, drawers, clock and power menu.
+The [tour](assets/prism-demo.mp4) shows the rest: the media tab, overview, drawers, clock and power menu.
 
 ## Features
 
@@ -56,7 +52,7 @@ The [tour](assets/prism-demo.mp4) shows the rest: the bongo cat, overview, drawe
   - `y ` YouTube
   - `w ` wallpapers
   - `?` help
-- **Dashboard** with tabs: Home, Media (a bongo cat drumming to the beat over a live visualizer), System (CPU / GPU / memory / disks / processes),
+- **Dashboard** with tabs: Home, Media (a spinning vinyl with the album art over a live visualizer), System (CPU / GPU / memory / disks / processes),
   Screen time, Network (Wi-Fi + Bluetooth), Audio (per-app mixer, mic meter) and Settings.
 - **Workspace overview** with live window previews:
   - drag windows between workspaces

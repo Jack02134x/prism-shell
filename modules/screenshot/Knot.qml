@@ -14,8 +14,8 @@ Item {
     height: size
     opacity: shown ? 1 : 0
     scale: shown ? 1 : 0.3
-    Behavior on opacity { NumAnim { duration: Motion.fast } }
-    Behavior on scale { NumAnim { duration: Motion.normal; easing.bezierCurve: Motion.spatialFast } }
+    Behavior on opacity { NumberAnimation { duration: Motion.fast } }
+    Behavior on scale { NumberAnimation { duration: Motion.normal; easing.type: Easing.OutBack } }
 
     Rectangle {
         anchors.centerIn: parent

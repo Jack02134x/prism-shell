@@ -8,7 +8,7 @@ import qs.common
 import qs.services
 import qs.widgets
 
-// Big "now playing": a bongo cat drumming along, blurred backdrop, full-width spectrum.
+// Big "now playing": spinning vinyl, blurred backdrop, full-width spectrum.
 Item {
     id: root
 
@@ -78,26 +78,92 @@ Item {
         anchors.bottomMargin: 190
         spacing: 40
 
-        // a bongo cat drumming along
+        // vinyl
         Item {
             Layout.preferredWidth: 340
             Layout.preferredHeight: 340
             Layout.alignment: Qt.AlignVCenter
 
-            // soft spotlight that breathes with the bass
             Rectangle {
                 anchors.centerIn: parent
-                width: 310 + (Media.playing ? Cava.bass * 36 : 0)
+                width: 340 + Cava.bass * 40
                 height: width
                 radius: width / 2
-                color: Theme.alpha(Theme.grad1, Media.playing ? 0.08 + Cava.bass * 0.1 : 0.05)
-                border.width: 2
-                border.color: Theme.alpha(Theme.grad1, Media.playing ? 0.18 + Cava.bass * 0.4 : 0.12)
+                color: "transparent"
+                border.width: 3
+                border.color: Theme.alpha(Theme.accent(0), 0.25 + Cava.bass * 0.5)
+                visible: Media.playing
             }
-            BongoCat {
+
+            Item {
+                id: vinyl
                 anchors.fill: parent
-                anchors.margins: 14
-                visible: root.active
+                anchors.margins: 10
+                rotation: spin.angle
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: width / 2
+                    color: "#111"
+                    border.width: 2
+                    border.color: Theme.alpha(Theme.accent(3), 0.6)
+                }
+                // grooves
+                Repeater {
+                    model: 7
+                    Rectangle {
+                        required property int index
+                        anchors.centerIn: parent
+                        width: vinyl.width * (0.95 - index * 0.06)
+                        height: width
+                        radius: width / 2
+                        color: "transparent"
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.06)
+                    }
+                }
+                ClippingRectangle {
+                    anchors.centerIn: parent
+                    width: parent.width * 0.52
+                    height: width
+                    radius: width / 2
+                    color: Theme.surfaceHigh
+                    Image {
+                        anchors.fill: parent
+                        source: Media.art
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        sourceSize.width: 400
+                        sourceSize.height: 400
+                    }
+                    Icon {
+                        anchors.centerIn: parent
+                        visible: Media.art === ""
+                        icon: "music"
+                        size: 60
+                        color: Theme.accent(0)
+                    }
+                }
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 14
+                    height: 14
+                    radius: 7
+                    color: "#111"
+                    border.width: 2
+                    border.color: Theme.accent(0)
+                }
+                // sheen
+                Rectangle {
+                    anchors.fill: parent
+                    radius: width / 2
+                    rotation: -spin.angle - 35
+                    gradient: Gradient {
+                        GradientStop { position: 0; color: Qt.rgba(1, 1, 1, 0.12) }
+                        GradientStop { position: 0.35; color: Qt.rgba(1, 1, 1, 0) }
+                        GradientStop { position: 1; color: Qt.rgba(1, 1, 1, 0) }
+                    }
+                }
             }
         }
 
@@ -219,4 +285,16 @@ Item {
         }
     }
 
+    Item {
+        id: spin
+        visible: false
+        property real angle: 0
+        NumberAnimation on angle {
+            from: 0
+            to: 360
+            duration: 6000
+            loops: Animation.Infinite
+            running: root.active && Media.playing
+        }
+    }
 }

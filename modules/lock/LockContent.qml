@@ -76,6 +76,7 @@ Item {
         fillMode: Image.PreserveAspectCrop
         sourceSize.width: 1280
         asynchronous: true
+        cache: false // same path every time (the copy is overwritten): never show a stale one
         visible: false
     }
     MultiEffect {
@@ -150,6 +151,43 @@ Item {
             font.letterSpacing: 6
             color: "white"
         }
+
+        // the day at a glance
+        RowLayout {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: 38
+            spacing: 10
+            LockChip {
+                visible: Weather.ready
+                icon: Weather.icon
+                tint: Weather.tint
+                text: Weather.tempText + "  " + Weather.desc
+            }
+            LockChip {
+                icon: Power.icon
+                tint: Theme.accent(3)
+                text: Power.percent + "%"
+            }
+            LockChip {
+                visible: Chrono.nextAlarm !== null
+                icon: "alarm"
+                tint: Theme.accent(5)
+                text: Chrono.s.nextAlarm ? Qt.formatTime(new Date(Chrono.s.nextAlarm.at), "HH:mm") + "  " + Chrono.s.nextAlarm.label : ""
+            }
+            LockChip {
+                visible: ScreenTime.available && ScreenTime.today > 0
+                icon: "monitor"
+                tint: Theme.accent(6)
+                text: Utils.human(ScreenTime.today) + " today"
+            }
+            LockChip {
+                // a count only: what they say stays private until unlocked
+                visible: Notifs.count > 0
+                icon: "bell"
+                tint: Theme.accent(1)
+                text: Notifs.count + (Notifs.count === 1 ? " notification" : " notifications")
+            }
+        }
     }
 
     // ---- login card ----
@@ -213,65 +251,28 @@ Item {
         }
     }
 
-    // ---- bottom strip: battery, weather, media ----
-    RowLayout {
+    // ---- music: cava along the bottom edge, the now-playing card (and the cat) ----
+    Visualizer {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.margins: 30
-        opacity: root.reveal * 0.9
-        spacing: 18
-
-        RowLayout {
-            spacing: 6
-            Icon {
-                icon: Power.icon
-                color: Theme.accent(3)
-            }
-            Txt {
-                text: Power.percent + "%"
-                color: "white"
-            }
-            Icon {
-                visible: Weather.ready
-                icon: Weather.icon
-                color: Weather.tint
-            }
-            Txt {
-                visible: Weather.ready
-                text: Weather.tempText + " " + Weather.desc
-                color: "white"
-            }
-        }
-        Item { Layout.fillWidth: true }
-        RowLayout {
-            visible: Media.hasPlayer
-            spacing: 10
-            Txt {
-                text: Media.title + (Media.artist ? " — " + Media.artist : "")
-                color: "white"
-                Layout.maximumWidth: 420
-            }
-            IconBtn {
-                icon: "skip_previous"
-                size: 32
-                iconColor: "white"
-                onClicked: Media.previous()
-            }
-            IconBtn {
-                icon: Media.playing ? "pause" : "play"
-                size: 38
-                active: true
-                accent: Theme.accent(0)
-                onClicked: Media.toggle()
-            }
-            IconBtn {
-                icon: "skip_next"
-                size: 32
-                iconColor: "white"
-                onClicked: Media.next()
-            }
-        }
+        height: 120
+        count: 64
+        spacing: 4
+        gain: 1.1
+        radius: 3
+        hifi: true
+        visible: Media.hasPlayer
+        opacity: root.reveal * (Media.playing ? 0.55 : 0.15)
+        Behavior on opacity { NumAnim { duration: Motion.slow } }
+    }
+    LockMedia {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: 36
+        visible: Media.hasPlayer && Media.title !== ""
+        opacity: root.reveal
+        transform: Translate { x: (1 - root.reveal) * 80 }
     }
 
     Txt {

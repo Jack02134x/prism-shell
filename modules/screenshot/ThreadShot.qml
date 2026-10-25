@@ -239,7 +239,7 @@ PanelWindow {
                 from: Qt.point(ax, ay)
                 to: Qt.point(tx + (ax - tx) * win.retract, ty + (ay - ty) * win.retract + win.fall)
                 color: Qt.rgba(Theme.grad1.r + (Theme.grad2.r - Theme.grad1.r) * index / 3, Theme.grad1.g + (Theme.grad2.g - Theme.grad1.g) * index / 3, Theme.grad1.b + (Theme.grad2.b - Theme.grad1.b) * index / 3, 1)
-                thickness: 2
+                thickness: 2.5
                 slack: win.cornered ? 0.035 : 0.06
             }
         }
