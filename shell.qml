@@ -53,7 +53,7 @@ ShellRoot {
     LazyPanel { want: Panels.dashboard; Dashboard {} }
     LazyPanel { want: Panels.overview; Overview {} }
     LazyPanel { want: Panels.wallpapers; WallpaperPicker {} }
-    LazyPanel { want: Panels.screenshot; ScreenshotMenu {} }
+    LazyPanel { want: Shot.active; keepMs: 1; ThreadShot {} }
     LazyPanel { want: Panels.record; RecordMenu {} }
     LazyPanel { want: Panels.cheatsheet; Cheatsheet {} }
     LazyPanel { want: Panels.edit; QuickEdit {} }

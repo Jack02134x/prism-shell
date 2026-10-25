@@ -249,7 +249,7 @@ Flickable {
                 sub: Toggles.recording ? "Recording…" : "Menu"
                 checked: Toggles.recording
                 accent: Theme.accent(9)
-                onClicked: Panels.show("screenshot")
+                onClicked: Shot.capture("region", "both", 0)
             }
             // your own tiles (config.json: drawers.customTiles), each runs its command
             Repeater {

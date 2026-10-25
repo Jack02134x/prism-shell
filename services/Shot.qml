@@ -5,49 +5,81 @@ import Quickshell
 import Quickshell.Io
 import qs.common
 
-// Screenshots with grim/slurp, region / window / screen modes, with
-// a delay option and a preview notification afterwards.
+// Screenshots without grim / slurp: modules/screenshot/ThreadShot.qml freezes
+// the screen (ScreencopyView), you pick a region / window on the still frame,
+// and it hands back the frame as a PNG plus the crop. This crops, saves, copies
+// and notifies.
 Singleton {
     id: root
 
+    // the overlay is up (it calls finish() once its closing animation is done)
+    property bool active: false
+    property var screen: null
+    property string mode: "region" // region | window | full
+    property string action: "both" // copy | save | both
     property bool busy: false
     property string lastFile: ""
 
-    // mode: region | window | full    action: copy | save | both
     function capture(mode, action, delay) {
-        if (busy)
+        if (active || busy || opener.running)
             return;
+        const wasOpen = Panels.anyOpen;
         Panels.closeAll();
-        Panels.capturing = true;
+        root.mode = mode;
+        root.action = action;
+        // let closing panels animate out first: the frame is taken as it looks
+        opener.interval = (wasOpen ? 450 : 30) + (delay ?? 0) * 1000;
+        opener.start();
+    }
+
+    Timer {
+        id: opener
+        onTriggered: {
+            Hypr.refresh();
+            root.screen = Panels.focusedScreen;
+            root.active = true;
+        }
+    }
+
+    function finish() {
+        active = false;
+    }
+
+    // Esc from outside (qs ipc call screenshot cancel); the overlay animates out
+    signal cancelRequested
+    function cancel() {
+        opener.stop();
+        if (active)
+            cancelRequested();
+    }
+
+    // frame: the whole frozen screen as a PNG; crop: "WxH+X+Y" in its pixels ("" = all of it)
+    function save(frame, crop) {
         busy = true;
         const ts = Qt.formatDateTime(new Date(), "yyyy-MM-dd_hh-mm-ss");
-        const save = action !== "copy";
-        const file = save ? Config.paths.screenshots + "/screenshot_" + ts + ".png" : Config.cacheDir + "/last-shot.png";
+        const keep = action !== "copy";
+        const file = keep ? Config.paths.screenshots + "/screenshot_" + ts + ".png" : Config.cacheDir + "/last-shot.png";
         lastFile = file;
-        const mon = Hypr.focusedWorkspace?.monitor?.name ?? "";
-        const geo = mode === "region" ? "g=$(slurp) || exit 1; " : mode === "window" ? "g=$(hyprctl activewindow -j | jq -r '\"\\(.at[0]),\\(.at[1]) \\(.size[0])x\\(.size[1])\"'); " : "g=''; ";
-        const grim = mode === "full" ? "grim " + (mon !== "" ? "-o \"$3\" " : "") + "\"$1\"" : "grim -g \"$g\" \"$1\"";
-        const copy = action !== "save" ? " && wl-copy < \"$1\"" : "";
-        // setsid: grim/slurp run in their own session, fully detached from the shell
-        proc.command = ["setsid", "-w", "sh", "-c", "mkdir -p \"$(dirname \"$1\")\"; sleep \"$2\"; " + geo + grim + copy, "shot", file, String(0.5 + (delay ?? 0)), mon];
-        proc.action = action;
-        proc.running = true;
+        const out = crop !== "" ? "magick \"$1\" -crop \"$3\" +repage \"$2\" && rm -f \"$1\"" : "mv -f \"$1\" \"$2\"";
+        const copy = action !== "save" ? " && wl-copy --type image/png < \"$2\"" : "";
+        writer.command = ["sh", "-c", "mkdir -p \"$(dirname \"$2\")\" && " + out + copy, "shot", frame, file, crop];
+        writer.running = true;
     }
 
     Process {
-        id: proc
-        property string action: "both"
+        id: writer
         onExited: code => {
             root.busy = false;
-            Panels.capturing = false;
-            if (code !== 0)
+            if (code !== 0) {
+                Notifs.local("Screenshot failed", "Couldn't write " + root.lastFile.replace(Config.home, "~"), "monitor_screenshot", 2, "", []);
                 return;
+            }
             const f = root.lastFile;
-            const saved = action !== "copy";
+            const saved = root.action !== "copy";
             Notifs.local(saved ? "Screenshot saved" : "Screenshot copied", saved ? f.replace(Config.home, "~") : "In your clipboard", "monitor_screenshot", 1, "file://" + f, saved ? [
                 { text: "Open", run: () => Quickshell.execDetached(["xdg-open", f]) },
                 { text: "Folder", run: () => Quickshell.execDetached(["xdg-open", Config.paths.screenshots]) },
-                { text: "Copy", run: () => Quickshell.execDetached(["sh", "-c", "wl-copy < \"$1\"", "c", f]) }
+                { text: "Copy", run: () => Quickshell.execDetached(["sh", "-c", "wl-copy --type image/png < \"$1\"", "c", f]) }
             ] : []);
         }
     }

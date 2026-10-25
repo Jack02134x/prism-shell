@@ -194,9 +194,9 @@ Overlay {
                 }
                 Btn {
                     icon: "camera"
-                    text: "Screenshot…"
+                    text: "Screenshot"
                     filled: false
-                    onClicked: Panels.show("screenshot")
+                    onClicked: Shot.capture("region", "both", 0)
                 }
             }
         }

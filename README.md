@@ -66,7 +66,7 @@ The [tour](assets/prism-demo.mp4) shows the rest: the bongo cat, overview, drawe
 - **Wallpaper picker**: a coverflow carousel where the transition grows from where you clicked.
   - Video wallpapers via mpvpaper.
   - Light/dark mode and colour-scheme picker (the whole system follows).
-- **Capture**: screenshot (region / window / screen) and screen-recording menus.
+- **Capture**: a screenshot tool where threads run from the screen corners to your selection. Drag a region, click a window, press Tab for window mode, Enter for the whole screen, C for the colour picker. It doesn't need grim or slurp. There's also a screen-recording menu.
 - **Session**: lock screen, polkit agent, power menu.
 - **Clock**: a floating window, written in Python, for timer, stopwatch (laps) and alarms (repeat days,
   snooze). You pick the alarm tone: built-in tones, system sounds or your own file. It can be pinned
@@ -162,7 +162,7 @@ before:
 | `SUPER + V` / `SUPER + .` | Clipboard / emoji |
 | `SUPER + W` / `SUPER + SHIFT + W` | Wallpaper picker / random wallpaper |
 | `SUPER + O` / `SUPER + SHIFT + TAB` | Workspace overview / window switcher |
-| `Print`, `SHIFT`/`CTRL`/`ALT + Print` | Screenshot menu, region, screen, window (`SUPER + ALT + P` also opens the menu) |
+| `Print`, `SHIFT`/`CTRL`/`ALT + Print` | Screenshot: region (`Print`, `SHIFT + Print` and `SUPER + ALT + P`), whole screen, window |
 | `SUPER + ALT + R` / `SUPER + SHIFT + ALT + R` | Recording menu / stop recording |
 | `SUPER + ALT + Space` / `SUPER + SHIFT + Space` | Minimise window / show minimised |
 | `SUPER + ALT + T` · `F` · `N` · `C` · `G` · `E` | Light/dark · focus timer · do not disturb · caffeine · game mode · EasyEffects |
@@ -275,6 +275,13 @@ Built on [Quickshell](https://quickshell.org). Also uses [matugen](https://githu
 awww, [cava](https://github.com/karlstav/cava),
 [cliphist](https://github.com/sentriz/cliphist), Material Design Icons via Nerd Fonts, and the
 Hyprland ecosystem.
+
+The screenshot tool's threads, which run from the screen corners to your selection, are inspired by
+**flicko**'s rice, as featured on the [Quickshell website](https://quickshell.org). Prism's version
+is its own take on the idea.
+
+Prism was designed and built by [Jack02134x](https://github.com/Jack02134x), with a lot of the code
+written together with **Claude** (Anthropic's AI model) in [Claude Code](https://claude.com/claude-code).
 
 The bundled wallpapers belong to their original artists. They're included so a fresh install
 looks right; open an issue if one is yours and you'd like it credited or removed.

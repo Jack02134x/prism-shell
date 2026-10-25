@@ -178,8 +178,12 @@ Scope {
 
     IpcHandler {
         target: "screenshot"
+        // the thread tool (region; Tab switches to window mode) — "menu" kept for old binds
         function menu(): void {
-            Panels.toggle("screenshot");
+            Shot.capture("region", "both", 0);
+        }
+        function color(): void {
+            Shot.pickColor();
         }
         function region(): void {
             Shot.capture("region", "both", 0);
@@ -189,6 +193,9 @@ Scope {
         }
         function full(): void {
             Shot.capture("full", "both", 0);
+        }
+        function cancel(): void {
+            Shot.cancel();
         }
     }
 

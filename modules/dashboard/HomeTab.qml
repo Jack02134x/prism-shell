@@ -266,7 +266,7 @@ Item {
                             label: "Screenshot"
                             sub: "Menu"
                             accent: Theme.accent(1)
-                            onClicked: Panels.show("screenshot")
+                            onClicked: Shot.capture("region", "both", 0)
                         }
                     }
                 }

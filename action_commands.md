@@ -25,7 +25,8 @@ rather than adding a second bind for the same key, or both commands will run.
 | Wallpaper picker | `qs ipc call wallpaper toggle` |
 | Random wallpaper | `qs ipc call wallpaper random` |
 | Power menu | `qs ipc call power toggle` |
-| Screenshot menu | `qs ipc call screenshot menu` |
+| Screenshot (region, Tab for window mode) | `qs ipc call screenshot menu` |
+| Colour picker | `qs ipc call screenshot color` |
 | Screen recording menu | `qs ipc call record menu` |
 | Quick edit (open favourite folders in your editor) | `qs ipc call edit toggle` |
 | Keybind cheatsheet | `qs ipc call cheatsheet toggle` |

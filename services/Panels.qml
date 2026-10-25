@@ -18,16 +18,15 @@ Singleton {
     property bool overview: false
     property bool wallpapers: false
     property string wallpaperQuery: ""
-    property bool screenshot: false
     property bool cheatsheet: false
     property bool record: false
     property bool edit: false
     property bool switcher: false
-    // true while grim/slurp/hyprpicker run: every Prism surface hides instantly
+    // true while hyprpicker runs: every Prism surface hides instantly
     property bool capturing: false
 
-    readonly property var names: ["launcher", "dashboard", "sidebar", "controls", "power", "overview", "wallpapers", "screenshot", "cheatsheet", "record", "edit", "switcher"]
-    readonly property bool anyOpen: launcher || dashboard || sidebar || controls || power || overview || wallpapers || screenshot || cheatsheet || record || edit || switcher
+    readonly property var names: ["launcher", "dashboard", "sidebar", "controls", "power", "overview", "wallpapers", "cheatsheet", "record", "edit", "switcher"]
+    readonly property bool anyOpen: launcher || dashboard || sidebar || controls || power || overview || wallpapers || cheatsheet || record || edit || switcher
 
     readonly property var focusedScreen: {
         const name = Hyprland.focusedMonitor?.name ?? "";
