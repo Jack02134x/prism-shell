@@ -251,6 +251,25 @@ Flickable {
                 accent: Theme.accent(9)
                 onClicked: Panels.show("screenshot")
             }
+            // your own tiles (config.json: drawers.customTiles), each runs its command
+            Repeater {
+                model: Config.drawers.customTiles ?? []
+                QuickTile {
+                    required property var modelData
+                    required property int index
+                    Layout.fillWidth: true
+                    icon: modelData.icon || "star_four_points"
+                    label: modelData.label || "Custom"
+                    sub: modelData.sub || ""
+                    accent: Theme.accent(index * 2 + 1)
+                    onClicked: {
+                        if (modelData.command) {
+                            Quickshell.execDetached(["sh", "-c", modelData.command]);
+                            Panels.controls = false;
+                        }
+                    }
+                }
+            }
         }
 
         MediaCard {

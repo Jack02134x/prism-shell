@@ -95,6 +95,9 @@ Singleton {
                 property bool right: true
                 // open when the pointer rests on the edge (otherwise drag/click)
                 property bool hoverOpen: false
+                // your own tiles in the left drawer: [{ "icon": "cellphone", "label": "Phone",
+                // "sub": "link", "command": "qs ipc call phone qr" }] (icon = a Material icon name)
+                property var customTiles: []
             }
 
             property JsonObject notifications: JsonObject {

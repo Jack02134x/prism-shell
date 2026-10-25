@@ -259,7 +259,7 @@ uninstall() {
         has_block "$f" "$SH_B" && { strip_block "$f" "$SH_B" "$SH_E"; ok "Hyprland no longer starts from $(tilde "$f")"; }
     done
     [[ -f $FISH_LOGIN ]] && run rm -f -- "$FISH_LOGIN" && ok "removed $(tilde "$FISH_LOGIN")"
-    has_block "$KITTY_CONF" "$SH_B" && { strip_block "$KITTY_CONF" "$SH_B" "$SH_E"; ok "kitty no longer uses Prism colours"; }
+    has_block "$KITTY_CONF" "$SH_B" && { strip_block "$KITTY_CONF" "$SH_B" "$SH_E"; ok "kitty: Prism's lines removed from kitty.conf"; }
     for g in gtk-3.0 gtk-4.0; do
         has_block "$CONFIG_HOME/$g/gtk.css" "$CSS_B" && strip_block "$CONFIG_HOME/$g/gtk.css" "$CSS_B" "$CSS_E"
     done
@@ -722,8 +722,10 @@ if ((DO_HYPR)); then
 fi
 
 # ======================================================== kitty + gtk ===
-# does the user's own matugen config (outside Prism's block) already write this?
-own_output() { [[ -f $MATUGEN_CONF ]] && awk -v b="$SH_B" -v e="$SH_E" '$0 == b { s = 1 } !s; $0 == e { s = 0 }' "$MATUGEN_CONF" | grep -q "$1"; }
+# does file $1, outside Prism's block, have a line matching $2?
+outside_block() { [[ -f $1 ]] && awk -v b="$SH_B" -v e="$SH_E" '$0 == b { s = 1 } !s; $0 == e { s = 0 }' "$1" | grep -q -- "$2"; }
+# does the user's own matugen config already write this?
+own_output() { outside_block "$MATUGEN_CONF" "$1"; }
 THEME_KITTY=0 THEME_GTK=0
 if ((DO_APPS)); then
     step "Apps"
@@ -735,11 +737,10 @@ if ((DO_APPS)); then
             run mkdir -p "$(dirname "$KITTY_CONF")"
             run cp -- "$DEST/apps/kitty.conf" "$KITTY_CONF"
             ok "kitty: starter config (JetBrains Mono, blur-friendly opacity, wallpaper colours)"
-        elif ! grep -q "prism-colors.conf" "$KITTY_CONF"; then
-            printf 'include prism-colors.conf' | put_block "$KITTY_CONF" "$SH_B" "$SH_E"
-            ok "kitty: added the wallpaper colours to your kitty.conf"
-        else
+        elif outside_block "$KITTY_CONF" "prism-colors.conf"; then
             ok "kitty: already uses Prism's colours"
+        else
+            ok "kitty: added the wallpaper colours to your kitty.conf"
         fi
         own_output "kitty/" || THEME_KITTY=1
 
@@ -766,6 +767,24 @@ EOF
         fi
         ok "GTK: adw-gtk3 + Papirus icons, coloured from the wallpaper"
         THEME_GTK=1
+    fi
+
+    # Prism's block in an existing kitty.conf: the wallpaper colours (if wanted),
+    # and no remembered window size. kitty also remembers "maximized", so once a
+    # maximized window is closed every new one opens maximized over the tiles.
+    if [[ -f $KITTY_CONF ]]; then
+        lines=()
+        ((THEME_KITTY)) && ! outside_block "$KITTY_CONF" "prism-colors.conf" &&
+            lines+=("include prism-colors.conf")
+        if ! outside_block "$KITTY_CONF" "^[[:space:]]*remember_window_size"; then
+            lines+=("# Hyprland sizes the windows; kitty remembering them reopens it maximized" "remember_window_size no")
+            ok "kitty: new windows tile instead of reopening maximized"
+        fi
+        if ((${#lines[@]})); then
+            printf '%s\n' "${lines[@]}" | put_block "$KITTY_CONF" "$SH_B" "$SH_E"
+        else
+            strip_block "$KITTY_CONF" "$SH_B" "$SH_E"
+        fi
     fi
 fi
 
