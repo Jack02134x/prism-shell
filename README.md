@@ -27,6 +27,18 @@ palette cross-fades instead of snapping.
 
 The [tour](assets/prism-demo.mp4) shows the rest: the media tab, overview, drawers, clock and power menu.
 
+### Login screen
+
+[Prism Login Manager](https://github.com/Jack02134x/prism-login-manager) is an optional extra that
+the installer offers. It's a greetd login screen built on Quickshell, and its Prism theme follows
+your desktop's wallpaper, colours and avatar.
+
+<p align="center">
+  <img src="assets/login-prism.jpg" alt="Prism Login Manager's Prism theme, matching the desktop" width="720">
+</p>
+
+More themes and the theme editor are in [its README](https://github.com/Jack02134x/prism-login-manager).
+
 ## Features
 
 - **Bar**
@@ -123,6 +135,7 @@ It asks before each step. It never deletes your files: anything it changes is ba
 | **Wallpapers** | Copies 10 wallpapers into `~/Pictures/Wallpapers` and makes the first palette from one of them. |
 | **Login** | Starts Hyprland when you log in on tty1 (bash, zsh or fish). This is skipped if you use a display manager. |
 | **Conflicts** | Finds waybar, mako, dunst, swaync, hyprpaper and similar, and offers to stop them. |
+| **Login screen** | Optional: installs [Prism Login Manager](https://github.com/Jack02134x/prism-login-manager), a greetd login screen that follows Prism's wallpaper and colours. It only replaces your current login screen if you say yes to that (never with `--yes` alone). |
 
 Options:
 
@@ -136,6 +149,7 @@ Options:
 | `--no-apps` | Don't theme kitty or GTK. |
 | `--no-login` | Don't start Hyprland on tty1. |
 | `--no-start` | Don't start anything at the end. |
+| `--no-plm` | Don't offer Prism Login Manager. |
 | `--refresh` | Re-apply Prism to what's already set up, without the setup questions (`upgrade.sh` runs this). |
 | `--uninstall` | Take it all back out (packages stay installed). |
 
@@ -248,6 +262,7 @@ and your copy stays in the backup.
 | `--yes` | Accept every default without asking. |
 | `--check` | Only say whether an update is available. |
 | `--force` | Re-apply Prism even when it's already up to date. |
+| `--no-plm` | Don't update Prism Login Manager this time. |
 
 An install too old to have `upgrade.sh` can run it straight from GitHub:
 `bash <(curl -fsSL https://raw.githubusercontent.com/Jack02134x/prism-shell/main/upgrade.sh)`

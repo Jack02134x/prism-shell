@@ -23,7 +23,11 @@
 #    8. screen time: the hyprland-screen_time tracker (systemd user service) that
 #       feeds the dashboard's Screen time tab, plus its GUI in the app launcher
 #
-# install.sh --help for options. install.sh --uninstall reverses steps 3–8.
+#    9. login screen (optional): Prism Login Manager, a greetd greeter that matches
+#       Prism (https://github.com/Jack02134x/prism-login-manager). It only becomes
+#       your login screen if you say yes to switching; skip it with --no-plm
+#
+# install.sh --help for options. install.sh --uninstall reverses steps 3–9.
 
 set -uo pipefail
 
@@ -38,6 +42,8 @@ FISH_LOGIN="$CONFIG_HOME/fish/conf.d/prism-hyprland.fish"
 DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 SCREENTIME_REPO="https://github.com/Jack02134x/hyprland-screen_time.git"
 SCREENTIME_DIR="$DATA_HOME/hyprland-screen_time"
+PLM_REPO="${PLM_REPO:-https://github.com/Jack02134x/prism-login-manager.git}"
+PLM_DIR="$DATA_HOME/prism-login-manager"
 ST_SERVICE="$CONFIG_HOME/systemd/user/hypr-screentime.service"
 ST_DESKTOP="$DATA_HOME/applications/hypr-screentime.desktop"
 LOG="${XDG_CACHE_HOME:-$HOME/.cache}/prism-install.log"
@@ -48,7 +54,7 @@ LUA_B="-- >>> prism >>>" LUA_E="-- <<< prism <<<"
 SH_B="# >>> prism >>>" SH_E="# <<< prism <<<"
 CSS_B="/* >>> prism >>> */" CSS_E="/* <<< prism <<< */"
 
-YES=0 DRY=0 DO_PACKAGES=1 DO_HYPR=1 DO_BINDS=1 DO_START=1 DO_LOGIN=1 DO_APPS=1 DO_ST=1 UNINSTALL=0 REFRESH=0
+YES=0 DRY=0 DO_PACKAGES=1 DO_HYPR=1 DO_BINDS=1 DO_START=1 DO_LOGIN=1 DO_APPS=1 DO_ST=1 DO_PLM=1 UNINSTALL=0 REFRESH=0
 
 # ---------------------------------------------------------------- output ----
 if [[ -t 1 ]]; then
@@ -198,6 +204,7 @@ Usage: install.sh [options]
       --no-apps      don't theme kitty / GTK
       --no-login     don't start Hyprland automatically on tty1
       --no-screentime  skip the screen-time tracker
+      --no-plm       don't offer Prism Login Manager (the matching login screen)
       --no-start     don't start anything at the end
       --refresh      re-apply Prism to what's already set up, without the setup
                      questions (upgrade.sh runs this after updating the files)
@@ -218,6 +225,7 @@ while (($#)); do
     --no-apps) DO_APPS=0 ;;
     --no-login) DO_LOGIN=0 ;;
     --no-screentime) DO_ST=0 ;;
+    --no-plm) DO_PLM=0 ;;
     --no-start) DO_START=0 ;;
     --uninstall) UNINSTALL=1 ;;
     --refresh) REFRESH=1 ;;
@@ -275,6 +283,13 @@ uninstall() {
         run rm -f -- "$ST_SERVICE" "$ST_DESKTOP"
         run systemctl --user daemon-reload
         ok "stopped the screen-time tracker (your data stays in $(tilde "$SCREENTIME_DIR"))"
+    fi
+
+    if [[ -f $PLM_DIR/install.sh ]] && ask "Also remove Prism Login Manager (your old login screen comes back)?" Y; then
+        plm_un=(--uninstall)
+        ((YES)) && plm_un+=(--yes)
+        ((DRY)) && plm_un+=(--dry-run)
+        run_i bash "$PLM_DIR/install.sh" "${plm_un[@]}" && ok "Prism Login Manager removed"
     fi
 
     if pidof quickshell >/dev/null; then
@@ -961,6 +976,54 @@ if ((${#walls[@]})) && [[ ! -s $DEST/.state/colors.lua ]] && have matugen; then
     fi
 fi
 
+# ========================================================== login screen ===
+# Prism Login Manager has its own installer; Prism downloads it and hands over.
+# PLM installs system-wide (sudo) but only replaces your login screen if you say
+# yes to switching (never with --yes alone). On --refresh it's only updated, and
+# only if Prism installed it before.
+if ((DO_PLM)); then
+    plm_flags=()
+    ((YES || REFRESH)) && plm_flags+=(--yes)
+    ((DRY)) && plm_flags+=(--dry-run)
+    ((DO_PACKAGES)) || plm_flags+=(--no-packages)
+    plm_go=0
+    if ((REFRESH)); then
+        # an update: new files and packages only; greetd and the wallpaper sync stay as set up
+        [[ -d $PLM_DIR/.git ]] && { plm_go=1; plm_flags+=(--no-setup --no-sync); step "Login screen"; }
+    elif [[ ! -d $PLM_DIR ]] && have plm; then
+        step "Login screen"
+        ok "Prism Login Manager is already installed (plm) — leaving it as it is"
+    else
+        step "Login screen"
+        info "Prism Login Manager is a matching login screen (greetd): themes, live wallpapers, and it can"
+        info "follow Prism's wallpaper and colours. ${D}https://github.com/Jack02134x/prism-login-manager${R}"
+        ask "Install it? (it asks before replacing your current login screen)" Y && plm_go=1
+    fi
+    if ((plm_go)); then
+        if [[ -d $PLM_DIR/.git ]]; then
+            run git -C "$PLM_DIR" pull --ff-only -q >>"$LOG" 2>&1 || warn "couldn't update Prism Login Manager (local changes?) — using the copy you have"
+        elif [[ -e $PLM_DIR ]]; then
+            warn "$(tilde "$PLM_DIR") exists but isn't a git checkout — skipping the login screen"
+            plm_go=0
+        elif ! run git clone --depth 1 -q "$PLM_REPO" "$PLM_DIR" >>"$LOG" 2>&1; then
+            warn "couldn't download $PLM_REPO — skipping the login screen"
+            plm_go=0
+        fi
+    fi
+    if ((plm_go)); then
+        ((DO_PACKAGES)) && keep_sudo
+        if [[ -f $PLM_DIR/install.sh ]] || ((DRY)); then
+            if run_i bash "$PLM_DIR/install.sh" "${plm_flags[@]}"; then
+                ok "Prism Login Manager $( ((REFRESH)) && echo "updated" || echo "installed") (plm test tries it in a window)"
+            else
+                warn "Prism Login Manager's installer failed — see the output above"
+            fi
+        else
+            warn "the download has no install.sh — skipping the login screen"
+        fi
+    fi
+fi
+
 # ================================================================= login ===
 if ((DO_LOGIN && DO_HYPR)) && ! systemctl is-enabled display-manager.service >/dev/null 2>&1; then
     step "Logging in"
@@ -1039,6 +1102,7 @@ cat <<EOF
     Prism keys    $(tilde "$DEST")/hypr/prism-binds.lua
     commands      $(tilde "$DEST")/action_commands.md
     update        $(tilde "$DEST")/upgrade.sh
+    login screen  plm test · plm editor$( have plm || [[ -d $PLM_DIR ]] || echo "  (not installed)")
     undo          $(tilde "$DEST")/install.sh --uninstall
     log           $(tilde "$LOG")
 

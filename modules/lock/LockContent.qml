@@ -98,9 +98,9 @@ Item {
     // ---- clock ----
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
-        y: parent.height * 0.12 + (1 - root.reveal) * -60
+        y: parent.height * 0.12 - 30 + (1 - root.reveal) * -60
         opacity: root.reveal
-        spacing: -20
+        spacing: -40
 
         Item {
             Layout.alignment: Qt.AlignHCenter
@@ -115,10 +115,11 @@ Item {
                 color: "white"
                 visible: false
                 layer.enabled: true
-                topPadding: 30
-                bottomPadding: 10
-                leftPadding: 10
-                rightPadding: 10
+                // room for the glyphs' overhang and the shadow, which the mask would clip
+                topPadding: 60
+                bottomPadding: 30
+                leftPadding: 50
+                rightPadding: 50
             }
             Rectangle {
                 id: g
@@ -155,7 +156,7 @@ Item {
         // the day at a glance
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: 38
+            Layout.topMargin: 58
             spacing: 10
             LockChip {
                 visible: Weather.ready

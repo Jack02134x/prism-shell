@@ -10,7 +10,8 @@
 #    of the new version where they still apply
 # 3. hands over to the new install.sh --refresh, which re-applies Prism to what
 #    you already set up (no setup questions; nothing you said no to comes back),
-#    installs any packages the new version needs, and restarts Prism
+#    installs any packages the new version needs, updates Prism Login Manager if
+#    Prism installed it (--no-plm skips that), and restarts Prism
 #
 # config.json, .state/ (palette, settings, history), .cache/ and local/ are
 # never touched. upgrade.sh --help for options.
@@ -41,7 +42,7 @@ tilde() { printf '%s' "${1/#$HOME/\~}"; }
 TTY=/dev/null
 [[ -r /dev/tty && -w /dev/tty ]] && (: </dev/tty) 2>/dev/null && TTY=/dev/tty
 
-YES=0 DRY=0 CHECK=0 FORCE=0
+YES=0 DRY=0 CHECK=0 FORCE=0 NO_PLM=0
 ask() {
     local q=$1 def=${2:-Y} hint reply=""
     [[ $def == Y ]] && hint="[Y/n]" || hint="[y/N]"
@@ -66,6 +67,7 @@ Usage: upgrade.sh [options]
       --check     only say whether an update is available
                   (exit 0: there is one, 1: up to date, 2: couldn't check)
       --force     re-apply (install.sh --refresh) even when already up to date
+      --no-plm    don't update Prism Login Manager this time
   -h, --help      this help
 
 Log: $(tilde "$LOG")
@@ -88,6 +90,7 @@ main() {
         -n | --dry-run) DRY=1 ;;
         --check) CHECK=1 ;;
         --force) FORCE=1 ;;
+        --no-plm) NO_PLM=1 ;;
         -h | --help) usage; exit 0 ;;
         *) usage; die "unknown option: $1" ;;
         esac
@@ -202,7 +205,7 @@ main() {
         step "Dry run"
         info "would update $(tilde "$DEST") to $(git -C "${scratch:-$DEST}" rev-parse --short "$NEW") and run install.sh --refresh:"
         if grep -q -- "--refresh)" "$DEST/install.sh"; then
-            bash "$DEST/install.sh" --refresh --dry-run --yes
+            bash "$DEST/install.sh" --refresh --dry-run --yes $( ((NO_PLM)) && echo --no-plm)
         else
             info "then the new install.sh would re-apply Prism (this copy's install.sh is too old to preview that)"
         fi
@@ -274,6 +277,7 @@ main() {
     # the new install.sh knows what the new version needs
     local -a flags=(--refresh)
     ((YES)) && flags+=(--yes)
+    ((NO_PLM)) && flags+=(--no-plm)
     cleanup
     exec bash "$DEST/install.sh" "${flags[@]}"
 }
