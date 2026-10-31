@@ -13,6 +13,7 @@ import qs.services
 import qs.widgets
 import qs.modules.bar
 import qs.modules.cheatsheet
+import qs.modules.clock
 import qs.modules.corners
 import qs.modules.dashboard
 import qs.modules.drawers
@@ -59,6 +60,9 @@ ShellRoot {
     LazyPanel { want: Panels.edit; QuickEdit {} }
     LazyPanel { want: Panels.switcher; Switcher {} }
     LazyPanel { want: Panels.power; PowerMenu {} }
+    // the clock floats on the Overlay layer (above fullscreen apps); it hides at once and is freed later
+    LazyPanel { want: Chrono.open; ClockWindow {} }
+    LazyPanel { want: Chrono.ringing !== null; RingCard {} }
     Lock {}
 
     LazyLoader {

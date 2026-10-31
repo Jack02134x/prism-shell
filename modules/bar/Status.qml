@@ -332,7 +332,7 @@ RowLayout {
     // ---- floating clock: shows what's counting, pulses while ringing ----
     Rectangle {
         id: chronoBtn
-        readonly property bool counting: Chrono.timerRunning || Chrono.swRunning
+        readonly property bool counting: Chrono.timerRunning || Chrono.ivRunning || Chrono.swRunning
         readonly property bool ringing: Chrono.ringing !== null
         implicitWidth: chronoRow.implicitWidth + 16
         implicitHeight: 30
@@ -353,14 +353,14 @@ RowLayout {
             spacing: 5
             Icon {
                 anchors.verticalCenter: parent.verticalCenter
-                icon: Chrono.timerRunning ? "timer_sand" : Chrono.swRunning ? "timer_outline" : "alarm"
+                icon: Chrono.timerRunning || Chrono.ivRunning ? "timer_sand" : Chrono.swRunning ? "timer_outline" : "alarm"
                 size: 15
                 color: chronoBtn.counting || chronoBtn.ringing ? Theme.grad1 : Theme.fg
             }
             Txt {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: chronoBtn.counting
-                text: Chrono.timerRunning ? Utils.hms(Chrono.timerLeft / 1000) : Utils.hms(Chrono.swElapsed / 1000)
+                text: Chrono.timerRunning ? Utils.hms(Math.ceil(Chrono.timerLeft / 1000)) : Chrono.ivRunning ? Utils.hms(Math.ceil(Chrono.ivState().left)) : Utils.hms(Chrono.swElapsed / 1000)
                 font.pixelSize: 11
                 font.family: Theme.mono
                 color: Theme.fg
@@ -374,7 +374,7 @@ RowLayout {
             onTapped: chronoBtn.ringing ? Chrono.stopRinging() : Chrono.toggle()
         }
         Tip {
-            text: chronoBtn.ringing ? "Click to stop" : Chrono.nextAlarm ? "Clock · next alarm in " + Utils.human(Chrono.nextAlarm.inMs / 1000) : "Clock: timer, stopwatch, alarms"
+            text: chronoBtn.ringing ? "Click to stop" : Chrono.nextAlarm ? "Clock · next alarm in " + Utils.human(Chrono.nextAlarm.inMs / 1000) : "Clock: alarms, world clock, timer, stopwatch"
             show: chronoHover.hovered
         }
     }

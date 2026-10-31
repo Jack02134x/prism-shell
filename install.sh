@@ -371,7 +371,7 @@ SHELL_PKGS=(
     wl-clipboard cliphist grim slurp wf-recorder hyprpicker
     brightnessctl playerctl imagemagick ffmpeg ffmpegthumbnailer
     hyprlock libnotify curl git
-    python pyside6 # apps/prism-clock (the floating clock / timer / alarms)
+    python # live wallpapers, the world clock's time zones
 )
 LOOKS=(
     ttf-nerd-fonts-symbols ttf-jetbrains-mono-nerd ttf-roboto adwaita-fonts
@@ -451,7 +451,7 @@ if ((DO_PACKAGES)); then
         ask "Track screen time? (python + PySide6, runs as a user service)" Y && WANT_ST=1
         ST_ASKED=1
     fi
-    ((WANT_ST)) && SHELL_PKGS+=(libpulse) # pactl, for counting audio; python + pyside6 are already in
+    ((WANT_ST)) && SHELL_PKGS+=(pyside6 libpulse) # the tracker's GUI; pactl, for counting audio
     mapfile -t NEED < <(missing "${DESKTOP[@]}" "${SHELL_PKGS[@]}" "${LOOKS[@]}")
     if ((${#NEED[@]})); then
         ((REFRESH)) && keep_sudo
@@ -592,7 +592,7 @@ else
     ok "copied Prism"
 fi
 run mkdir -p "$DEST/.state" "$DEST/.cache"
-run chmod +x "$DEST/install.sh" "$DEST/upgrade.sh" "$DEST/scripts/thumbs.sh" "$DEST/apps/prism-clock/prism_clock.py" 2>/dev/null
+run chmod +x "$DEST/install.sh" "$DEST/upgrade.sh" "$DEST/scripts/thumbs.sh" 2>/dev/null
 
 # ================================================================ config ===
 step "Personalising"
@@ -1066,13 +1066,11 @@ if ((DO_START && IN_HYPR)); then
         ((DO_HYPR)) && run hyprctl reload >/dev/null
         pgrep -f 'wl-paste --type text --watch' >/dev/null || run setsid -f wl-paste --type text --watch cliphist store
         pgrep -f 'wl-paste --type image --watch' >/dev/null || run setsid -f wl-paste --type image --watch cliphist store
+        # the clock used to be a separate Python app: stop it before the new shell
+        # reads (and converts) its alarms, or it writes them back in the old format
+        pgrep -f "prism_clock.py --run" >/dev/null && run pkill -f "prism_clock.py --run" && { ((DRY)) || sleep 1; }
         pidof quickshell >/dev/null && run pkill -x quickshell && { ((DRY)) || sleep 0.5; }
         run setsid -f quickshell >/dev/null 2>&1
-        # the clock app keeps running its old code otherwise (it comes back hidden; alarms are kept)
-        clock=$DEST/apps/prism-clock/prism_clock.py
-        if [[ -f $clock ]] && pgrep -f "prism_clock.py --run" >/dev/null; then
-            run python3 "$clock" quit && { ((DRY)) || sleep 0.5; } && run python3 "$clock" daemon
-        fi
         ok "Prism is running"
     fi
 fi

@@ -114,6 +114,13 @@ Scope {
         function snooze(): void {
             Chrono.snooze();
         }
+        // shrink to the pill (or back): on | off | toggle
+        function mini(state: string): void {
+            if (!Chrono.open)
+                Chrono.show("");
+            Chrono.d.win.mini = state === "on" ? true : state === "off" ? false : !Chrono.d.win.mini;
+            Chrono.touch();
+        }
     }
 
     IpcHandler {

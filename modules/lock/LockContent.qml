@@ -173,7 +173,7 @@ Item {
                 visible: Chrono.nextAlarm !== null
                 icon: "alarm"
                 tint: Theme.accent(5)
-                text: Chrono.s.nextAlarm ? Qt.formatTime(new Date(Chrono.s.nextAlarm.at), "HH:mm") + "  " + Chrono.s.nextAlarm.label : ""
+                text: Chrono.nextAlarm ? Chrono.fmtWhen(Chrono.nextAlarm.at) + "  " + Chrono.nextAlarm.label : ""
             }
             LockChip {
                 visible: ScreenTime.available && ScreenTime.today > 0

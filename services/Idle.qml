@@ -109,6 +109,36 @@ Singleton {
     // never leave the screen dark or dimmed behind a reload / quit
     Component.onDestruction: wake()
 
+    // ...but a killed shell can't clean up. If a screen is already off when we
+    // start, take it as ours, and turn it on at the next key press or mouse move
+    // (Hyprland doesn't, unless misc:mouse_move_enables_dpms is set).
+    property bool startedDark: false
+    Process {
+        running: true
+        command: ["hyprctl", "monitors", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    if (JSON.parse(text).some(m => m.dpmsStatus === false)) {
+                        root.screensOff = true;
+                        root.startedDark = true;
+                    }
+                } catch (e) {}
+            }
+        }
+    }
+    Variants {
+        model: root.startedDark && root.screensOff ? [1] : []
+        IdleMonitor {
+            required property var modelData
+            timeout: modelData
+            onIsIdleChanged: if (!isIdle) {
+                root.startedDark = false;
+                root.wake();
+            }
+        }
+    }
+
     // ---- hypridle still around? then it's in charge ----
     Process {
         id: hypridleCheck

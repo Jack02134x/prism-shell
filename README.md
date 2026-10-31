@@ -76,11 +76,18 @@ More themes and the theme editor are in [its README](https://github.com/Jack0213
   - Light/dark mode and colour-scheme picker (the whole system follows).
 - **Capture**: a screenshot tool where threads run from the screen corners to your selection. Drag a region, click a window, press Tab for window mode, Enter for the whole screen, C for the colour picker. It doesn't need grim or slurp. There's also a screen-recording menu.
 - **Session**: lock screen, polkit agent, power menu.
-- **Clock**: a floating window, written in Python, for timer, stopwatch (laps) and alarms (repeat days,
-  snooze). You pick the alarm tone: built-in tones, system sounds or your own file. It can be pinned
-  to every workspace or kept on one, and shrinks to a mini pill that shows whatever is counting. It
-  keeps time in the background, and the bar shows what's running. Open it from the alarm button
-  next to the bar clock, by right-clicking the clock, or with `SUPER + ALT + K`.
+- **Clock**: a floating window that stays above fullscreen apps, with four tabs.
+  - **Alarms**: repeat on chosen weekdays, every N days or on one date. Groups switch a whole set
+    on or off together. There's a reminder before an alarm (with "skip this one"), skip-next,
+    snooze, and a tone for each alarm or group.
+  - **Clock**: a world clock. Fast mode runs the clock ahead by a secret few minutes each day;
+    hold the time to see the real one.
+  - **Timer**: a keypad timer, plus an interval timer with named steps, rounds and saved sets.
+  - **Stopwatch**: laps, with the fastest and slowest marked.
+
+  It can be pinned to every workspace or kept on one, and shrinks to a mini pill showing whatever is
+  counting. Alarms ring with the window closed, and the bar shows what's running. Open it from the
+  alarm button next to the bar clock, by right-clicking the clock, or with `SUPER + ALT + K`.
 - **Extras**:
   - Pomodoro focus timer with study noise
   - 20-20-20 eye-break reminders
