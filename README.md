@@ -39,6 +39,20 @@ your desktop's wallpaper, colours and avatar.
 
 More themes and the theme editor are in [its README](https://github.com/Jack02134x/prism-login-manager).
 
+## Other takes on Prism
+
+One of the coolest things about sharing Prism is seeing what other people make out of it.
+
+### [ForeverAlkash's rice](https://github.com/ForeverAlkash/rice)
+
+A different take on Prism by [**ForeverAlkash**](https://github.com/ForeverAlkash),
+with their own design choices, features and personal touches.
+
+I came across their fork and really liked what they've done with it.
+It's great to see someone take Prism and turn it into something of their own.
+
+Definitely worth checking out and giving a star!
+
 ## Features
 
 - **Bar**
