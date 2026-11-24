@@ -19,6 +19,8 @@ Item {
     // one at a time (oldest first); each is still kept in the notification drawer
     readonly property var peek: Notifs.popups.length > 0 && !Panels.sidebar ? Notifs.popups[Notifs.popups.length - 1] : null
     onPeekChanged: {
+        shot = null;
+        grabLater.restart();
         peekTimer.stop();
         if (peek && peek.timeout > 0) {
             peekTimer.interval = Math.min(peek.timeout, 7000);
@@ -102,7 +104,127 @@ Item {
     Timer {
         id: peekTimer
         interval: 6000
-        onTriggered: root.peek?.expireNow()
+        onTriggered: root.flinging ? restart() : root.peek?.expireNow()
+    }
+
+    // ---- throwing a notification: drag it out of the island; let go fast or
+    // far and it flies off (momentum, gravity, spin) and is dismissed, else it
+    // springs back. The flying copy is a picture of the card, drawn by
+    // FlingLayer over the whole screen (this window is only bar-sized). ----
+    property real windowX: 0 // where the host window starts on the screen
+    property bool flinging: false // the card is out of the island
+    property bool flyOn: false // FlingLayer is up
+    property bool thrown: false
+    property var shot: null // the grabbed picture of the current card
+    property var flyShot: null // the one in flight (outlives the dismissed card)
+    property point flyOrigin
+    property size flySize
+    property real fx: 0
+    property real fy: 0
+    property real rot: 0
+    property real flyAlpha: 1
+    property real vx: 0
+    property real vy: 0
+    property real spin: 0
+    property real flyT: 0
+    // sometimes it says so
+    property bool yeet: false
+    property point yeetPos
+    property real yeetTilt: 0
+
+    // a picture of the card once it has settled (the island morphs first)
+    Timer {
+        id: grabLater
+        interval: Motion.slow + 120
+        onTriggered: root.grabCard()
+    }
+    function grabCard() {
+        if (mode !== "notif" || flinging)
+            return;
+        shape.grabToImage(r => {
+            root.shot = r;
+            if (root.flinging && !root.thrown)
+                root.flyShot = r;
+        }, Qt.size(shape.width, shape.height));
+    }
+
+    function flingStart() {
+        const p = shape.parent.mapToItem(null, shape.x, shape.y);
+        flyOrigin = Qt.point(p.x + windowX, p.y);
+        flySize = Qt.size(shape.width, shape.height);
+        fx = fy = rot = 0;
+        flyAlpha = 1;
+        thrown = false;
+        flyShot = shot;
+        if (!shot)
+            grabCard();
+        flinging = true;
+        flyOn = true;
+    }
+    function flingMove(t) {
+        fx = t.x;
+        fy = Math.max(t.y, -flyOrigin.y - flySize.height * 0.5);
+        rot = Utils.clamp(fx * 0.05, -16, 16);
+    }
+    function flingRelease(v) {
+        const dist = Math.hypot(fx, fy), speed = Math.hypot(v.x, v.y);
+        if (dist < 110 && speed < 900) {
+            backAnim.start();
+            return;
+        }
+        // thrown: keep the hand's speed (at least a decent push along the drag)
+        if (speed < 900) {
+            vx = fx / dist * 1100;
+            vy = fy / dist * 1100;
+        } else {
+            vx = Utils.clamp(v.x, -5000, 5000);
+            vy = Utils.clamp(v.y, -5000, 5000);
+        }
+        spin = Utils.clamp(vx * 0.12 + (Math.random() - 0.5) * 60, -540, 540);
+        flyT = 0;
+        yeet = Math.random() < 0.3;
+        yeetPos = Qt.point(flyOrigin.x + fx + flySize.width / 2, flyOrigin.y + fy + flySize.height / 2);
+        yeetTilt = (vx >= 0 ? 1 : -1) * (6 + Math.random() * 8);
+        thrown = true;
+        const e = peek;
+        flinging = false;
+        e?.dismiss();
+    }
+    // the flight: a fixed ~1.1 s at most, fading out at the end
+    FrameAnimation {
+        running: root.flyOn && root.thrown
+        onTriggered: {
+            const dt = Math.min(frameTime, 1 / 30);
+            root.vy += 2600 * dt; // gravity
+            root.vx *= 1 - 0.4 * dt; // air
+            root.fx += root.vx * dt;
+            root.fy += root.vy * dt;
+            root.rot += root.spin * dt;
+            root.flyT += dt;
+            root.flyAlpha = root.flyT < 0.7 ? 1 : Math.max(0, 1 - (root.flyT - 0.7) / 0.4);
+            if ((root.flyAlpha <= 0 || root.flyOrigin.y + root.fy > 2600) && (!root.yeet || root.flyT > 1.05)) {
+                root.flyOn = false;
+                root.thrown = false;
+                root.flyShot = null;
+            }
+        }
+    }
+    ParallelAnimation {
+        id: backAnim
+        NumberAnimation { target: root; property: "fx"; to: 0; duration: Motion.normal; easing.type: Easing.OutBack; easing.overshoot: 1.6 }
+        NumberAnimation { target: root; property: "fy"; to: 0; duration: Motion.normal; easing.type: Easing.OutBack; easing.overshoot: 1.6 }
+        NumberAnimation { target: root; property: "rot"; to: 0; duration: Motion.normal; easing.type: Easing.OutCubic }
+        onFinished: {
+            root.flinging = false;
+            root.flyOn = false;
+            root.flyShot = null;
+        }
+    }
+    LazyLoader {
+        active: root.flyOn
+        FlingLayer {
+            island: root
+        }
     }
     Timer {
         id: holdOpen
@@ -504,6 +626,7 @@ Item {
             Loader {
                 anchors.fill: parent
                 active: notifLayer.visible
+                opacity: root.flinging ? 0 : 1
                 sourceComponent: Item {
                     ColumnLayout {
                         anchors.fill: parent
@@ -605,9 +728,19 @@ Item {
             }
         }
 
+        DragHandler {
+            id: fling
+            target: null
+            enabled: root.mode === "notif" && !backAnim.running && !root.thrown
+            dragThreshold: 8
+            onActiveChanged: active ? root.flingStart() : root.flingRelease(centroid.velocity)
+            onTranslationChanged: if (active) root.flingMove(translation)
+        }
         HoverHandler {
             id: hoverHandler
             onHoveredChanged: {
+                if (hovered && root.mode === "notif" && !root.shot)
+                    root.grabCard();
                 if (!hovered)
                     holdOpen.restart();
                 // hovering keeps a notification on screen

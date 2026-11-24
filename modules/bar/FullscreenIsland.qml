@@ -54,6 +54,7 @@ Scope {
                 anchors.horizontalCenter: parent.horizontalCenter
                 y: Config.bar.margin
                 barHeight: Config.bar.height
+                windowX: ((win.screen?.width ?? 1920) - win.implicitWidth) / 2
             }
         }
     }
